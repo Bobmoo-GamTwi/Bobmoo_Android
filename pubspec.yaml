@@ -1,0 +1,92 @@
+name: bobmoo
+description: "A new Flutter project."
+publish_to: 'none'
+
+# 버전 설정 versionName+versionCode
+version: 1.1.0+15
+
+environment:
+  sdk: ^3.9.2
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+
+  cupertino_icons: ^1.0.8
+  http: ^1.5.0
+  flutter_svg: ^2.2.1
+
+  isar_community: 
+    version: ^3.3.0
+  isar_community_flutter_libs: # contains Isar Core
+    version: ^3.3.0
+
+  path_provider: ^2.1.5
+  get_it: ^8.2.0
+  in_app_update: ^4.2.5
+  
+  home_widget: ^0.8.0
+  shared_preferences: ^2.5.3
+  workmanager: ^0.9.0+3
+  flutter_screenutil: ^5.9.3
+  package_info_plus: ^9.0.0
+  firebase_core: ^4.2.1
+  firebase_analytics: ^12.0.4
+  provider: ^6.1.5+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+  build_runner: any
+  isar_community_generator: 
+    version: ^3.3.0
+
+flutter:
+  uses-material-design: true
+
+  default-flavor: prod
+
+  assets:
+    - assets/icons/
+    - assets/fonts/
+    - assets/data/
+    
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Pretendard-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Pretendard-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Pretendard-Bold.ttf
+          weight: 700
+
+    - family: NanumSquareRound
+      fonts:
+        - asset: assets/fonts/NanumSquareRoundL.ttf
+          weight: 300
+        - asset: assets/fonts/NanumSquareRoundR.ttf
+          weight: 400
+        - asset: assets/fonts/NanumSquareRoundB.ttf
+          weight: 700
+        - asset: assets/fonts/NanumSquareRoundEB.ttf
+          weight: 800
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/icon.png"
+  remove_alpha_ios: true
+
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/icon.png"
