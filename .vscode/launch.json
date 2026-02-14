@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "밥묵자 (Dev - Debug)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "debug",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--flavor",
+                "dev"
+            ]
+        },
+        {
+            "name": "밥묵자 (Staging - Release)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--flavor",
+                "staging"
+            ]
+        }
+    ]
+}
