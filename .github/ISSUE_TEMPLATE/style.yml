@@ -1,0 +1,33 @@
+name: 🎨 Style
+description: UI 구현/수정 작업
+title: "[Style] "
+labels: ["Design"]
+
+body:
+  - type: textarea
+    attributes:
+      label: 📌 작업 요약
+      description: 변경할 UI/스타일을 간결하게 작성해주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🎯 작업 목적
+      description: 왜 필요한가요?
+
+  - type: textarea
+    attributes:
+      label: 🛠 구현 계획
+      description: 어떻게 구현/수정할 예정인가요?
+
+  - type: checkboxes
+    attributes:
+      label: 📱 영향 범위
+      options:
+        - label: UI 변경
+        - label: API 연동
+        - label: 상태관리 변경
+        - label: 빌드 설정 변경
+        - label: 의존성 변경
+        - label: 데이터 구조 변경
