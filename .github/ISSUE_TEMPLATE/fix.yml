@@ -1,0 +1,27 @@
+name: 🐛 Fix
+description: 버그/오류 해결 작업
+title: "[Fix] "
+labels: ["Bug"]
+
+body:
+  - type: textarea
+    attributes:
+      label: 🐞 문제 상황
+      description: 어떤 문제가 발생하나요?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🔁 재현 방법
+      description: 재현 단계가 있다면 적어주세요.
+
+  - type: textarea
+    attributes:
+      label: 🎯 기대 동작
+      description: 원래 어떻게 동작해야 하나요?
+
+  - type: textarea
+    attributes:
+      label: 📱 환경
+      description: 기기/OS/앱 버전 등
