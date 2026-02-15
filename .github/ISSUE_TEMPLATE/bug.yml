@@ -1,0 +1,31 @@
+name: 🐛 Bug
+description: 버그 / 오류 수정
+title: "[Fix] "
+labels: ["bug"]
+
+body:
+  - type: textarea
+    attributes:
+      label: 🐞 문제 상황
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🔁 재현 방법
+
+  - type: textarea
+    attributes:
+      label: 🎯 기대 동작
+
+  - type: textarea
+    attributes:
+      label: 📱 환경 (기기 / OS / 앱 버전)
+
+  - type: checkboxes
+    attributes:
+      label: ✅ 완료 조건
+      options:
+        - label: 재현 테스트 완료
+        - label: 수정 후 재테스트 완료
+        - label: 빌드 정상 동작 확인

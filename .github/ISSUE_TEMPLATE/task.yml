@@ -1,0 +1,61 @@
+name: 📝 Task
+description: 기능 / UI / 설정 / 문서 / 기타 작업
+title: "[Feat] "
+labels: []
+
+body:
+  - type: dropdown
+    id: tag
+    attributes:
+      label: 🏷 작업 태그 선택
+      description: 반드시 하나를 선택해주세요.
+      options:
+        - Feat - 기능 구현
+        - Style - UI 구현
+        - Add - 에셋 / 라이브러리 추가
+        - Fix - 버그 수정
+        - Docs - 문서 수정
+        - Refactor - 코드 리팩토링
+        - Delete - 코드 / 파일 삭제
+        - Setting - 프로젝트 설정 변경
+        - Chore - 기타 작업
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 📌 작업 요약
+      description: 작업 내용을 간결하게 작성해주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🎯 작업 목적
+      description: 왜 이 작업이 필요한가요?
+
+  - type: textarea
+    attributes:
+      label: 🛠 구현 계획
+      description: 어떻게 구현할 예정인가요?
+
+  - type: checkboxes
+    attributes:
+      label: 📱 영향 범위
+      options:
+        - label: UI 변경
+        - label: API 연동
+        - label: 상태관리 변경
+        - label: 빌드 설정 변경
+        - label: 의존성 변경
+        - label: 데이터 구조 변경
+
+  - type: checkboxes
+    attributes:
+      label: ✅ 완료 조건 (Definition of Done)
+      options:
+        - label: 브랜치 규칙 준수 (feat/#이슈번호)
+        - label: PR 제목 규칙 준수 ([태그] #이슈번호 - 제목)
+        - label: 빌드 테스트 완료
+        - label: 불필요한 코드 제거
+        - label: 리뷰 반영 완료
