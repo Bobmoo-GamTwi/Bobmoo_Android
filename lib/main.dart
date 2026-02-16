@@ -94,7 +94,7 @@ class BobMooApp extends StatelessWidget {
               ],
               home: univProvider.selectedUniversity == null
                   ? const SelectSchoolScreen()
-                  : MyHomePage(),
+                  : HomeScreen(),
             );
           },
         );
