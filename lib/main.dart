@@ -3,7 +3,7 @@ import 'package:bobmoo/constants/app_constants.dart';
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/screens/home_screen.dart';
-import 'package:bobmoo/screens/school_selection_screen.dart';
+import 'package:bobmoo/screens/select_school_screen.dart';
 import 'package:bobmoo/services/background_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -93,7 +93,7 @@ class BobMooApp extends StatelessWidget {
                 Locale('ko', 'KR'),
               ],
               home: univProvider.selectedUniversity == null
-                  ? const SchoolSelectionScreen()
+                  ? const SelectSchoolScreen()
                   : MyHomePage(),
             );
           },

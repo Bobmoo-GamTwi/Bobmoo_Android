@@ -7,14 +7,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
-class SchoolSelectionScreen extends StatefulWidget {
-  const SchoolSelectionScreen({super.key});
+class SelectSchoolScreen extends StatefulWidget {
+  const SelectSchoolScreen({super.key});
 
   @override
-  State<SchoolSelectionScreen> createState() => _SchoolSelectionScreenState();
+  State<SelectSchoolScreen> createState() => _SelectSchoolScreenState();
 }
 
-class _SchoolSelectionScreenState extends State<SchoolSelectionScreen> {
+class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
   List<University>? univs;
   bool _isLoading = true;
 
