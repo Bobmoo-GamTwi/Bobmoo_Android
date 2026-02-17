@@ -64,8 +64,8 @@ class BobMooApp extends StatelessWidget {
       designSize: const Size(402, 874),
       minTextAdapt: true,
       builder: (context, child) {
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
           initialRoute: "/",
           routes: {
             // 앱 시작점
@@ -79,28 +79,24 @@ class BobMooApp extends StatelessWidget {
             // 설정화면 라우트
             "/settings": (context) => const SettingsScreen(),
           },
-              title: '밥묵자',
-              theme: univProvider.selectedUniversity == null
-                  ? _getThemeData(Colors.white)
-                  : _getThemeData(
-                      univProvider.selectedUniversity!.hexToColor(),
-                    ),
-              locale: const Locale('ko', 'KR'), // 앱의 기본 언어를 한국어로 설정
-              localizationsDelegates: const [
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: const [
-                Locale('ko', 'KR'),
-              ],
+          title: '밥묵자',
+          theme: _getThemeData(),
+          locale: const Locale('ko', 'KR'), // 앱의 기본 언어를 한국어로 설정
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('ko', 'KR'),
+          ],
         );
       },
     );
   }
 
   // 테마 생성 로직
-  ThemeData _getThemeData(Color schoolColor) {
+  ThemeData _getThemeData() {
     return ThemeData(
       fontFamily: 'Pretendard',
 
@@ -109,13 +105,9 @@ class BobMooApp extends StatelessWidget {
 
       colorScheme: ColorScheme.fromSeed(
         // [기본 설정]
-        seedColor: schoolColor,
+        seedColor: AppColors.primaryNeutral,
         brightness: Brightness.light,
 
-        // [대학교 색상]
-        // primary: 가장 중요한 요소 (활성 버튼, 앱바 등)
-        primary: schoolColor,
-        onPrimary: Colors.white, // primary 글자색
         // [표면/컴포넌트 컬러]
         // surface: 카드, 바텀시트, 다이얼로그의 기본 배경색
         surface: Colors.white,
