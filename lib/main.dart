@@ -2,8 +2,11 @@ import 'package:bobmoo/constants/app_colors.dart';
 import 'package:bobmoo/constants/app_constants.dart';
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
+import 'package:bobmoo/screens/app_gate.dart';
 import 'package:bobmoo/screens/home_screen.dart';
+import 'package:bobmoo/screens/onboarding_screen.dart';
 import 'package:bobmoo/screens/select_school_screen.dart';
+import 'package:bobmoo/screens/settings_screen.dart';
 import 'package:bobmoo/services/background_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -61,22 +64,21 @@ class BobMooApp extends StatelessWidget {
       designSize: const Size(402, 874),
       minTextAdapt: true,
       builder: (context, child) {
-        return Consumer<UnivProvider>(
-          builder: (context, univProvider, _) {
-            // [분기점 1] 아직 저장소에서 데이터를 읽는 중이라면?
-            if (!univProvider.isInitialized) {
-              return const MaterialApp(
-                home: Scaffold(
-                  body: Center(
-                    child: CircularProgressIndicator(),
-                  ), // 로딩 TODO: 나중에 밥묵자 로고로 바꾸든 하기
-                ),
-              );
-            }
-
-            // [분기점 2] 데이터를 읽었는데 대학 정보가 있다면 해당 색상을, 없으면 기본 light 테마로(추후 수정)
             return MaterialApp(
               debugShowCheckedModeBanner: false,
+          initialRoute: "/",
+          routes: {
+            // 앱 시작점
+            "/": (context) => const AppGate(),
+            // 온보딩 화면 라우트
+            "/onboarding": (context) => const OnboardingScreen(),
+            // 학교 선택 화면 라우트
+            "/select_school": (context) => const SelectSchoolScreen(),
+            // 홈화면 라우트
+            "/home": (context) => const HomeScreen(),
+            // 설정화면 라우트
+            "/settings": (context) => const SettingsScreen(),
+          },
               title: '밥묵자',
               theme: univProvider.selectedUniversity == null
                   ? _getThemeData(Colors.white)
@@ -92,11 +94,6 @@ class BobMooApp extends StatelessWidget {
               supportedLocales: const [
                 Locale('ko', 'KR'),
               ],
-              home: univProvider.selectedUniversity == null
-                  ? const SelectSchoolScreen()
-                  : HomeScreen(),
-            );
-          },
         );
       },
     );
