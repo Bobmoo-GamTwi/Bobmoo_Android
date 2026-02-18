@@ -1,4 +1,4 @@
-import 'package:bobmoo/constants/app_colors.dart';
+import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/constants/app_constants.dart';
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/models/university.dart';
