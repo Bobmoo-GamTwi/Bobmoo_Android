@@ -45,11 +45,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const SplashScreen();
     }
 
     return Scaffold(
