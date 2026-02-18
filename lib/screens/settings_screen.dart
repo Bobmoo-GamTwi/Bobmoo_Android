@@ -1,4 +1,5 @@
 import 'package:bobmoo/constants/app_colors.dart';
+import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/services/permission_service.dart';
 import 'package:flutter/material.dart';
@@ -141,6 +142,18 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
+  Future<void> _openSelectSchool() async {
+    final University? university = await Navigator.of(
+      context,
+    ).pushNamed<University?>("/select_school", arguments: true);
+
+    if (!mounted) return;
+
+    if (university != null) {
+      context.read<UnivProvider>().updateUniversity(university);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final univColor = context.watch<UnivProvider>().univColor;
@@ -181,10 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen>
 
           // 학교 설정 카드
           _buildSettingsCard(
-            onTap: () {
-              context.read<UnivProvider>().updateUniversity(null);
-              Navigator.pop(context);
-            },
+            onTap: _openSelectSchool,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

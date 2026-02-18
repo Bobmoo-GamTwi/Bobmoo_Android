@@ -4,6 +4,8 @@ class AppColors {
   // 인스턴스화 방지 (C++의 static class처럼 사용)
   AppColors._();
 
+  static const Color primaryNeutral = Color(0x0061656f);
+
   // --- 텍스트 컬러 (Grayscale) ---
   static const Color greyTextColor = Color(0xFF8B8787);
   static const Color grayDividerColor = Color(0xFF797979); // 리스트 구분선

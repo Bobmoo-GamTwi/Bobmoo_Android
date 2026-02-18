@@ -1,9 +1,13 @@
 import 'package:bobmoo/constants/app_colors.dart';
 import 'package:bobmoo/constants/app_constants.dart';
 import 'package:bobmoo/locator.dart';
+import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
+import 'package:bobmoo/screens/app_gate.dart';
 import 'package:bobmoo/screens/home_screen.dart';
-import 'package:bobmoo/screens/school_selection_screen.dart';
+import 'package:bobmoo/screens/onboarding_screen.dart';
+import 'package:bobmoo/screens/select_school_screen.dart';
+import 'package:bobmoo/screens/settings_screen.dart';
 import 'package:bobmoo/services/background_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -61,49 +65,76 @@ class BobMooApp extends StatelessWidget {
       designSize: const Size(402, 874),
       minTextAdapt: true,
       builder: (context, child) {
-        return Consumer<UnivProvider>(
-          builder: (context, univProvider, _) {
-            // [분기점 1] 아직 저장소에서 데이터를 읽는 중이라면?
-            if (!univProvider.isInitialized) {
-              return const MaterialApp(
-                home: Scaffold(
-                  body: Center(
-                    child: CircularProgressIndicator(),
-                  ), // 로딩 TODO: 나중에 밥묵자 로고로 바꾸든 하기
-                ),
-              );
-            }
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          initialRoute: "/",
+          onGenerateRoute: (settings) {
+            switch (settings.name) {
+              // 앱 시작점
+              case "/":
+                return MaterialPageRoute(
+                  settings: settings,
+                  builder: (_) => const AppGate(),
+                );
 
-            // [분기점 2] 데이터를 읽었는데 대학 정보가 있다면 해당 색상을, 없으면 기본 light 테마로(추후 수정)
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
-              title: '밥묵자',
-              theme: univProvider.selectedUniversity == null
-                  ? _getThemeData(Colors.white)
-                  : _getThemeData(
-                      univProvider.selectedUniversity!.hexToColor(),
-                    ),
-              locale: const Locale('ko', 'KR'), // 앱의 기본 언어를 한국어로 설정
-              localizationsDelegates: const [
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: const [
-                Locale('ko', 'KR'),
-              ],
-              home: univProvider.selectedUniversity == null
-                  ? const SchoolSelectionScreen()
-                  : MyHomePage(),
-            );
+              // 온보딩 화면 라우트
+              case "/onboarding":
+                return MaterialPageRoute(
+                  settings: settings,
+                  builder: (_) => const OnboardingScreen(),
+                );
+
+              // 학교 선택 화면 라우트
+              case "/select_school":
+                // 여기만 “반환 타입”을 명시
+                final bool allowBack = settings.arguments as bool;
+                return MaterialPageRoute<University?>(
+                  settings: settings,
+                  builder: (_) => SelectSchoolScreen(allowBack: allowBack),
+                );
+
+              // 홈화면 라우트
+              case "/home":
+                return MaterialPageRoute(
+                  settings: settings,
+                  builder: (_) => const HomeScreen(),
+                );
+
+              // 설정화면 라우트
+              case "/settings":
+                return MaterialPageRoute(
+                  settings: settings,
+                  builder: (_) => const SettingsScreen(),
+                );
+
+              // 잘못된 라우트 이름
+              default:
+                return MaterialPageRoute(
+                  settings: settings,
+                  builder: (_) => const Scaffold(
+                    body: Center(child: Text("Unknown route")),
+                  ),
+                );
+            }
           },
+          title: '밥묵자',
+          theme: _getThemeData(),
+          locale: const Locale('ko', 'KR'), // 앱의 기본 언어를 한국어로 설정
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('ko', 'KR'),
+          ],
         );
       },
     );
   }
 
   // 테마 생성 로직
-  ThemeData _getThemeData(Color schoolColor) {
+  ThemeData _getThemeData() {
     return ThemeData(
       fontFamily: 'Pretendard',
 
@@ -112,13 +143,9 @@ class BobMooApp extends StatelessWidget {
 
       colorScheme: ColorScheme.fromSeed(
         // [기본 설정]
-        seedColor: schoolColor,
+        seedColor: AppColors.primaryNeutral,
         brightness: Brightness.light,
 
-        // [대학교 색상]
-        // primary: 가장 중요한 요소 (활성 버튼, 앱바 등)
-        primary: schoolColor,
-        onPrimary: Colors.white, // primary 글자색
         // [표면/컴포넌트 컬러]
         // surface: 카드, 바텀시트, 다이얼로그의 기본 배경색
         surface: Colors.white,
