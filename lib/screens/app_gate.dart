@@ -37,7 +37,9 @@ class _AppGateState extends State<AppGate> {
           ? "/home"
           : "/onboarding";
 
-      Navigator.of(context).pushReplacementNamed(targetRoute);
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(targetRoute, (route) => false);
     });
   }
 
