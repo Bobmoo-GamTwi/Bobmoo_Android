@@ -62,7 +62,7 @@ class BobMooApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(402, 874),
+      designSize: const Size(360, 800),
       minTextAdapt: true,
       builder: (context, child) {
         return MaterialApp(
