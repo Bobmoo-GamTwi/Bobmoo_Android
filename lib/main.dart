@@ -1,6 +1,7 @@
 import 'package:bobmoo/constants/app_colors.dart';
 import 'package:bobmoo/constants/app_constants.dart';
 import 'package:bobmoo/locator.dart';
+import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/screens/app_gate.dart';
 import 'package:bobmoo/screens/home_screen.dart';
@@ -67,17 +68,54 @@ class BobMooApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           initialRoute: "/",
-          routes: {
-            // 앱 시작점
-            "/": (context) => const AppGate(),
-            // 온보딩 화면 라우트
-            "/onboarding": (context) => const OnboardingScreen(),
-            // 학교 선택 화면 라우트
-            "/select_school": (context) => const SelectSchoolScreen(),
-            // 홈화면 라우트
-            "/home": (context) => const HomeScreen(),
-            // 설정화면 라우트
-            "/settings": (context) => const SettingsScreen(),
+          onGenerateRoute: (settings) {
+            switch (settings.name) {
+              // 앱 시작점
+              case "/":
+                return MaterialPageRoute(
+                  settings: settings,
+                  builder: (_) => const AppGate(),
+                );
+
+              // 온보딩 화면 라우트
+              case "/onboarding":
+                return MaterialPageRoute(
+                  settings: settings,
+                  builder: (_) => const OnboardingScreen(),
+                );
+
+              // 학교 선택 화면 라우트
+              case "/select_school":
+                // 여기만 “반환 타입”을 명시
+                final bool allowBack = settings.arguments as bool;
+                return MaterialPageRoute<University?>(
+                  settings: settings,
+                  builder: (_) => SelectSchoolScreen(allowBack: allowBack),
+                );
+
+              // 홈화면 라우트
+              case "/home":
+                return MaterialPageRoute(
+                  settings: settings,
+                  builder: (_) => const HomeScreen(),
+                );
+
+              // 설정화면 라우트
+              case "/settings":
+                return MaterialPageRoute(
+                  settings: settings,
+                  builder: (_) => const SettingsScreen(),
+                );
+
+              // 잘못된 라우트 이름
+              default:
+                return MaterialPageRoute(
+                  settings: settings,
+                  builder: (_) => const Scaffold(
+                    body: Center(child: Text("Unknown route")),
+                  ),
+                );
+            }
           },
           title: '밥묵자',
           theme: _getThemeData(),
