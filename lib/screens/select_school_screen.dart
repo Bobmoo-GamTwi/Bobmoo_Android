@@ -80,7 +80,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
           return ListTile(
             title: Text(university.name),
             onTap: () {
-              context.read<UnivProvider>().updateUniversity(university);
+                Navigator.of(context).pop(university);
             },
           );
         },
