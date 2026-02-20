@@ -29,5 +29,5 @@ class AppColors {
   static const Color colorGray5 = Color(0xFF8F8F8F);
   static const Color colorBlack = Color(0xFF000000);
   static const Color colorWhite = Color(0xFFFFFFFF);
-  static const Color colorWhite10 = Color(0x1AFFFFFF); // 10% 투명도
+  static const Color colorWhite10 = Color(0x1AFFFFFF); // 10% 불투명도
 }
