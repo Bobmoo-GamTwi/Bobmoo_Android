@@ -44,7 +44,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final univs = context.watch<SearchProvider>().filteredItems;
+    final univs = context.select((SearchProvider p) => p.filteredItems);
 
     return PopScope(
       canPop: widget.allowBack,
@@ -101,7 +101,6 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
 
             Expanded(
               child: ListView.separated(
-                shrinkWrap: true,
                 physics: const BouncingScrollPhysics(),
                 itemCount: univs.length,
                 itemBuilder: (context, index) {
@@ -127,6 +126,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
                   );
                 },
                 separatorBuilder: (context, index) => Divider(
+                  // TODO: 두께 들쭉날쭉 관련 논의
                   thickness: 2.5,
                   color: AppColors.colorGray5,
                 ),
@@ -142,7 +142,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15.r),
-        boxShadow: [AppShadow.card],
+        boxShadow: const [AppShadow.card],
       ),
       height: 48.h,
       child: TextField(
