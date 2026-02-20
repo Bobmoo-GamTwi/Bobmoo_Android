@@ -1,3 +1,4 @@
+import 'package:bobmoo/providers/search_provider.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/constants/app_constants.dart';
 import 'package:bobmoo/locator.dart';
@@ -49,6 +50,9 @@ void main() async {
       providers: [
         ChangeNotifierProvider(
           create: (_) => UnivProvider()..init(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => SearchProvider()..init(),
         ),
       ],
       child: const BobMooApp(),
