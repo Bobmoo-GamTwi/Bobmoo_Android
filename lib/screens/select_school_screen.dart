@@ -1,10 +1,8 @@
-import 'dart:convert';
-
-import 'package:bobmoo/models/university.dart';
-import 'package:bobmoo/screens/splash_screen.dart';
+import 'package:bobmoo/providers/search_provider.dart';
+import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
 class SelectSchoolScreen extends StatefulWidget {
   final bool allowBack;
@@ -19,40 +17,9 @@ class SelectSchoolScreen extends StatefulWidget {
 }
 
 class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
-  List<University>? univs;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUniversities();
-  }
-
-  Future<void> _loadUniversities() async {
-    final universities = await loadUniversities();
-    if (mounted) {
-      setState(() {
-        univs = universities;
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<List<University>> loadUniversities() async {
-    // universities.json 파일에서 대학목록을 불러옵니다.
-    // TODO: 이후에 대학 목록 API와 연동시켜야함.
-    final String jsonString = await rootBundle.loadString(
-      'assets/data/universities.json',
-    );
-    final List<dynamic> jsonList = jsonDecode(jsonString);
-    return jsonList.map((json) => University.fromJson(json)).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const SplashScreen();
-    }
+    final univs = context.watch<SearchProvider>().filteredItems;
 
     return PopScope(
       canPop: widget.allowBack,
@@ -81,25 +48,48 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
           ),
           toolbarHeight: 110.h,
         ),
-        body: ListView.separated(
-          physics: const BouncingScrollPhysics(),
-          itemCount: univs?.length ?? 0,
-          itemBuilder: (context, index) {
-            final university = univs![index];
+        body: Column(
+          children: [
+            TextField(
+              onChanged: (value) =>
+                  context.read<SearchProvider>().updateKeyword(value),
+              decoration: InputDecoration(
+                hintText: "학교를 검색하세요",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+            Expanded(
+              child: univs.isEmpty
+                  ? Center(
+                      child: Text("검색 결과가 없습니다"),
+                    )
+                  : ListView.separated(
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: univs.length,
+                      itemBuilder: (context, index) {
+                        final university = univs[index];
 
-            return ListTile(
-              title: Text(university.name),
-              onTap: () {
-                Navigator.of(context).pop(university);
-              },
-            );
-          },
-          separatorBuilder: (context, index) => Divider(
-            thickness: 1.5,
-            color: Colors.black.withValues(alpha: 0.3),
-          ),
+                        return ListTile(
+                          title: Text(
+                            university.name,
+                            style: AppTypography.search.b17,
+                          ),
+                          onTap: () {
+                            Navigator.of(context).pop(university);
+                          },
+                        );
+                      },
+                      separatorBuilder: (context, index) => Divider(
+                        thickness: 1,
+                        color: Colors.black.withValues(alpha: 0.3),
+                      ),
+                    ),
+            ),
+          ],
         ),
       ),
-    ); //TODO: 학교찾기 구현(학교선택)
+    );
   }
 }
