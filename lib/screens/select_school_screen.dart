@@ -17,6 +17,32 @@ class SelectSchoolScreen extends StatefulWidget {
 }
 
 class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      // Appbar의 기본 여백 제거
+      titleSpacing: 0,
+      backgroundColor: Colors.white,
+      // 온보딩화면 -> false, 설정화면 -> true
+      automaticallyImplyLeading: widget.allowBack,
+      scrolledUnderElevation: 0,
+      title: Padding(
+        padding: EdgeInsets.only(left: 36.w),
+        child: Text(
+          "학교찾기",
+          style: TextStyle(
+            fontSize: 30.sp,
+            fontWeight: FontWeight.w700,
+            // 자간 5% (픽셀 계산)
+            letterSpacing: 30.sp * 0.05,
+            // 행간 170%
+            height: 1.7,
+          ),
+        ),
+      ),
+      toolbarHeight: 110.h,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final univs = context.watch<SearchProvider>().filteredItems;
@@ -25,29 +51,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
       canPop: widget.allowBack,
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          // Appbar의 기본 여백 제거
-          titleSpacing: 0,
-          backgroundColor: Colors.white,
-          // 온보딩화면 -> false, 설정화면 -> true
-          automaticallyImplyLeading: widget.allowBack,
-          scrolledUnderElevation: 0,
-          title: Padding(
-            padding: EdgeInsets.only(left: 36.w),
-            child: Text(
-              "학교찾기",
-              style: TextStyle(
-                fontSize: 30.sp,
-                fontWeight: FontWeight.w700,
-                // 자간 5% (픽셀 계산)
-                letterSpacing: 30.sp * 0.05,
-                // 행간 170%
-                height: 1.7,
-              ),
-            ),
-          ),
-          toolbarHeight: 110.h,
-        ),
+        appBar: _buildAppBar(),
         body: Column(
           children: [
             TextField(
