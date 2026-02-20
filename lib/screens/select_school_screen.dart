@@ -1,4 +1,8 @@
+import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/search_provider.dart';
+import 'package:bobmoo/ui/components/buttons/primary_button.dart';
+import 'package:bobmoo/ui/theme/app_colors.dart';
+import 'package:bobmoo/ui/theme/app_shadow.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -21,25 +25,18 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
     return AppBar(
       // Appbar의 기본 여백 제거
       titleSpacing: 0,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.colorGray4,
       // 온보딩화면 -> false, 설정화면 -> true
       automaticallyImplyLeading: widget.allowBack,
       scrolledUnderElevation: 0,
       title: Padding(
-        padding: EdgeInsets.only(left: 36.w),
+        padding: EdgeInsets.only(left: 27.w, top: 10.h),
         child: Text(
           "학교찾기",
-          style: TextStyle(
-            fontSize: 30.sp,
-            fontWeight: FontWeight.w700,
-            // 자간 5% (픽셀 계산)
-            letterSpacing: 30.sp * 0.05,
-            // 행간 170%
-            height: 1.7,
-          ),
+          style: AppTypography.head.b30,
         ),
       ),
-      toolbarHeight: 110.h,
+      toolbarHeight: 98.h,
     );
   }
 
@@ -50,48 +47,120 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
     return PopScope(
       canPop: widget.allowBack,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.colorGray4,
         appBar: _buildAppBar(),
-        body: Column(
-          children: [
-            TextField(
-              onChanged: (value) =>
-                  context.read<SearchProvider>().updateKeyword(value),
-              decoration: InputDecoration(
-                hintText: "학교를 검색하세요",
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-              autofocus: true,
-            ),
-            Expanded(
-              child: univs.isEmpty
-                  ? Center(
-                      child: Text("검색 결과가 없습니다"),
-                    )
-                  : ListView.separated(
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: univs.length,
-                      itemBuilder: (context, index) {
-                        final university = univs[index];
+        body: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 23.w),
+          child: Column(
+            children: [
+              _buildSearchField(),
+              SizedBox(height: 25.h),
 
-                        return ListTile(
-                          title: Text(
-                            university.name,
-                            style: AppTypography.search.b17,
-                          ),
-                          onTap: () {
-                            Navigator.of(context).pop(university);
-                          },
-                        );
-                      },
-                      separatorBuilder: (context, index) => Divider(
-                        thickness: 1,
-                        color: Colors.black.withValues(alpha: 0.3),
-                      ),
+              _buildSearchResult(univs),
+              SizedBox(height: 27.h),
+
+              PrimaryButton(text: "선택완료", onTap: () {}),
+              SizedBox(height: 27.h),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Expanded _buildSearchResult(List<University> univs) {
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          vertical: 18.h,
+          horizontal: 17.w,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.colorWhite,
+          borderRadius: BorderRadius.circular(15.r),
+          boxShadow: const [AppShadow.card],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "검색 결과 ${univs.length}",
+              style: AppTypography.search.b15,
+            ),
+
+            SizedBox(height: 10.h),
+
+            Expanded(
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const BouncingScrollPhysics(),
+                itemCount: univs.length,
+                itemBuilder: (context, index) {
+                  final university = univs[index];
+
+                  return ListTile(
+                    minTileHeight: 58.h,
+                    title: Text(
+                      university.name,
+                      style: AppTypography.search.b17,
                     ),
+                    onTap: () {
+                      Navigator.of(context).pop(university);
+                    },
+                  );
+                },
+                separatorBuilder: (context, index) => Divider(
+                  thickness: 2.5,
+                  color: AppColors.colorGray5,
+                ),
+              ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Container _buildSearchField() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15.r),
+        boxShadow: [AppShadow.card],
+      ),
+      height: 48.h,
+      child: TextField(
+        onChanged: (value) =>
+            context.read<SearchProvider>().updateKeyword(value),
+        autofocus: true,
+        style: AppTypography.search.sb15,
+        decoration: InputDecoration(
+          hintText: "학교를 검색해 주세요",
+          hintStyle: AppTypography.search.sb15.copyWith(
+            color: AppColors.colorGray3,
+          ),
+          suffixIcon: Icon(
+            Icons.search,
+            size: 25.w,
+            weight: 2.w,
+          ),
+          filled: true,
+          fillColor: AppColors.colorWhite,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 15.w,
+            vertical: 13.h,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15.r),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15.r),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15.r),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
     );
