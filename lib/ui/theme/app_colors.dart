@@ -17,4 +17,17 @@ class AppColors {
 
   // --- 배경 컬러 ---
   static const Color background = Color(0xFFF5F5F5); // 앱 전체 배경 회색
+
+  // --- Figma 컬러 ---
+  static const Color colorRed = Color(0xFFFF2200);
+  static const Color colorBlue = Color(0xFF0064FB);
+
+  static const Color colorGray1 = Color(0xFFEBEBEB);
+  static const Color colorGray2 = Color(0xFFD9D9D9);
+  static const Color colorGray3 = Color(0xFF61656F);
+  static const Color colorGray4 = Color(0xFFF5F5F5);
+  static const Color colorGray5 = Color(0xFF8F8F8F);
+  static const Color colorBlack = Color(0xFF000000);
+  static const Color colorWhite = Color(0xFFFFFFFF);
+  static const Color colorWhite10 = Color(0x1AFFFFFF); // 10% 투명도
 }
