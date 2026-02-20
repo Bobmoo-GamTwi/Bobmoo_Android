@@ -143,7 +143,7 @@ class BobMooApp extends StatelessWidget {
       fontFamily: 'Pretendard',
 
       // 배경색 설정
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: AppColors.colorGray4,
 
       colorScheme: ColorScheme.fromSeed(
         // [기본 설정]
@@ -152,11 +152,8 @@ class BobMooApp extends StatelessWidget {
 
         // [표면/컴포넌트 컬러]
         // surface: 카드, 바텀시트, 다이얼로그의 기본 배경색
-        surface: Colors.white,
-        onSurface: Colors.black,
-
-        // outline: 입력창 테두리, 카드 외곽선, 리스트 구분선
-        outline: AppColors.grayDividerColor,
+        surface: AppColors.colorWhite,
+        onSurface: AppColors.colorBlack,
 
         // 색상 생성 알고리즘을 왜곡없이 그대로 사용
         dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
