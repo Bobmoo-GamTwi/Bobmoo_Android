@@ -18,6 +18,9 @@ TextStyle _textStyle({
 );
 
 class AppTypography {
+  // 인스턴스화 방지
+  AppTypography._();
+
   static const head = _Head();
   static const caption = _Caption();
   static const button = _Button();
