@@ -28,7 +28,7 @@ class SearchProvider extends ChangeNotifier {
     return jsonList.map((json) => University.fromJson(json)).toList();
   }
 
-  void updateKeyword(String keyword) async {
+  void updateKeyword(String keyword) {
     _keyword = keyword;
     notifyListeners();
   }
@@ -39,11 +39,12 @@ class SearchProvider extends ChangeNotifier {
     // 키워드가 비어있다면 그대로 반환
     if (_keyword == "") return _allItems;
 
+    final normalizedKeyword = _keyword.replaceAll(" ", "").toLowerCase();
+
     return _allItems.where((item) {
       final itemName = item.name.replaceAll(" ", "").toLowerCase();
-      final keyword = _keyword.replaceAll(" ", "").toLowerCase();
 
-      return itemName.contains(keyword);
+      return itemName.contains(normalizedKeyword);
     }).toList();
   }
 }
