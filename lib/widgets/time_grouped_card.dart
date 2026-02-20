@@ -1,4 +1,4 @@
-import 'package:bobmoo/constants/app_colors.dart';
+import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/meal_by_cafeteria.dart';
 import 'package:bobmoo/widgets/cafeteria_menu_column.dart';
 import 'package:flutter/material.dart';

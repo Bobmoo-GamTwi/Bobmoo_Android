@@ -1,4 +1,4 @@
-import 'package:bobmoo/constants/app_colors.dart';
+import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/services/permission_service.dart';
@@ -145,7 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   Future<void> _openSelectSchool() async {
     final University? university = await Navigator.of(
       context,
-    ).pushNamed<University?>("/select_school", arguments: true);
+    ).pushNamed<University?>("/select_school", arguments: false);
 
     if (!mounted) return;
 

@@ -22,6 +22,13 @@ class University {
     };
   }
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is University && other.name == name;
+
+  @override
+  int get hashCode => name.hashCode;
+
   Color hexToColor() {
     return Color(int.parse(colorCode.replaceFirst('#', '0xff')));
   }

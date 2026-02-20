@@ -1,10 +1,12 @@
-import 'dart:convert';
-
 import 'package:bobmoo/models/university.dart';
-import 'package:bobmoo/screens/splash_screen.dart';
+import 'package:bobmoo/providers/search_provider.dart';
+import 'package:bobmoo/ui/components/buttons/primary_button.dart';
+import 'package:bobmoo/ui/theme/app_colors.dart';
+import 'package:bobmoo/ui/theme/app_shadow.dart';
+import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
 class SelectSchoolScreen extends StatefulWidget {
   final bool allowBack;
@@ -19,87 +21,165 @@ class SelectSchoolScreen extends StatefulWidget {
 }
 
 class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
-  List<University>? univs;
-  bool _isLoading = true;
+  University? _selectedUniv;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUniversities();
-  }
-
-  Future<void> _loadUniversities() async {
-    final universities = await loadUniversities();
-    if (mounted) {
-      setState(() {
-        univs = universities;
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<List<University>> loadUniversities() async {
-    // universities.json 파일에서 대학목록을 불러옵니다.
-    // TODO: 이후에 대학 목록 API와 연동시켜야함.
-    final String jsonString = await rootBundle.loadString(
-      'assets/data/universities.json',
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      // Appbar의 기본 여백 제거
+      titleSpacing: 0,
+      backgroundColor: AppColors.colorGray4,
+      // 온보딩화면 -> false, 설정화면 -> true
+      automaticallyImplyLeading: widget.allowBack,
+      scrolledUnderElevation: 0,
+      title: Padding(
+        padding: EdgeInsets.only(left: 27.w, top: 10.h),
+        child: Text(
+          "학교찾기",
+          style: AppTypography.head.b30,
+        ),
+      ),
+      toolbarHeight: 98.h,
     );
-    final List<dynamic> jsonList = jsonDecode(jsonString);
-    return jsonList.map((json) => University.fromJson(json)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const SplashScreen();
-    }
+    final univs = context.select((SearchProvider p) => p.filteredItems);
 
     return PopScope(
       canPop: widget.allowBack,
       child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          // Appbar의 기본 여백 제거
-          titleSpacing: 0,
-          backgroundColor: Colors.white,
-          // 온보딩화면 -> false, 설정화면 -> true
-          automaticallyImplyLeading: widget.allowBack,
-          scrolledUnderElevation: 0,
-          title: Padding(
-            padding: EdgeInsets.only(left: 36.w),
-            child: Text(
-              "학교찾기",
-              style: TextStyle(
-                fontSize: 30.sp,
-                fontWeight: FontWeight.w700,
-                // 자간 5% (픽셀 계산)
-                letterSpacing: 30.sp * 0.05,
-                // 행간 170%
-                height: 1.7,
-              ),
-            ),
-          ),
-          toolbarHeight: 110.h,
-        ),
-        body: ListView.separated(
-          physics: const BouncingScrollPhysics(),
-          itemCount: univs?.length ?? 0,
-          itemBuilder: (context, index) {
-            final university = univs![index];
+        backgroundColor: AppColors.colorGray4,
+        appBar: _buildAppBar(),
+        body: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 23.w),
+          child: Column(
+            children: [
+              _buildSearchField(),
+              SizedBox(height: 25.h),
 
-            return ListTile(
-              title: Text(university.name),
-              onTap: () {
-                Navigator.of(context).pop(university);
-              },
-            );
-          },
-          separatorBuilder: (context, index) => Divider(
-            thickness: 1.5,
-            color: Colors.black.withValues(alpha: 0.3),
+              _buildSearchResult(univs),
+              SizedBox(height: 27.h),
+
+              if (_selectedUniv != null) ...[
+                PrimaryButton(
+                  text: "선택완료",
+                  onTap: () {
+                    Navigator.of(context).pop(_selectedUniv);
+                  },
+                ),
+                SizedBox(height: 27.h),
+              ],
+            ],
           ),
         ),
       ),
-    ); //TODO: 학교찾기 구현(학교선택)
+    );
+  }
+
+  Expanded _buildSearchResult(List<University> univs) {
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          vertical: 18.h,
+          horizontal: 17.w,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.colorWhite,
+          borderRadius: BorderRadius.circular(15.r),
+          boxShadow: const [AppShadow.card],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "검색 결과 ${univs.length}",
+              style: AppTypography.search.b15,
+            ),
+
+            SizedBox(height: 10.h),
+
+            Expanded(
+              child: ListView.separated(
+                physics: const BouncingScrollPhysics(),
+                itemCount: univs.length,
+                itemBuilder: (context, index) {
+                  final university = univs[index];
+
+                  return ListTile(
+                    minTileHeight: 58.h,
+                    trailing: _selectedUniv == university
+                        ? Icon(Icons.check, size: 25.h)
+                        : null,
+                    iconColor: AppColors.colorGray3,
+                    title: Text(
+                      university.name,
+                      style: AppTypography.search.b17,
+                    ),
+                    onTap: () {
+                      setState(() {
+                        _selectedUniv = _selectedUniv == university
+                            ? null
+                            : university;
+                      });
+                    },
+                  );
+                },
+                separatorBuilder: (context, index) => Divider(
+                  // TODO: 두께 들쭉날쭉 관련 논의
+                  thickness: 2.5,
+                  color: AppColors.colorGray5,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Container _buildSearchField() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15.r),
+        boxShadow: const [AppShadow.card],
+      ),
+      height: 48.h,
+      child: TextField(
+        onChanged: (value) =>
+            context.read<SearchProvider>().updateKeyword(value),
+        autofocus: true,
+        style: AppTypography.search.sb15,
+        decoration: InputDecoration(
+          hintText: "학교를 검색해 주세요",
+          hintStyle: AppTypography.search.sb15.copyWith(
+            color: AppColors.colorGray3,
+          ),
+          suffixIcon: Icon(
+            Icons.search,
+            size: 25.w,
+            weight: 2.w,
+          ),
+          filled: true,
+          fillColor: AppColors.colorWhite,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 15.w,
+            vertical: 13.h,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15.r),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15.r),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15.r),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
   }
 }

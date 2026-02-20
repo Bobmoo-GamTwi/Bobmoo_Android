@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:bobmoo/collections/meal_collection.dart';
-import 'package:bobmoo/constants/app_colors.dart';
+import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/models/all_cafeterias_widget_data.dart';
 import 'package:bobmoo/models/meal_by_cafeteria.dart';
