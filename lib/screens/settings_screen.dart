@@ -145,7 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   Future<void> _openSelectSchool() async {
     final University? university = await Navigator.of(
       context,
-    ).pushNamed<University?>("/select_school", arguments: true);
+    ).pushNamed<University?>("/select_school", arguments: false);
 
     if (!mounted) return;
 
