@@ -1,4 +1,4 @@
-import 'package:bobmoo/constants/app_colors.dart';
+import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/menu_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

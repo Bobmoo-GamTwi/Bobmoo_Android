@@ -1,4 +1,5 @@
-import 'package:bobmoo/constants/app_colors.dart';
+import 'package:bobmoo/providers/search_provider.dart';
+import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/constants/app_constants.dart';
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/models/university.dart';
@@ -50,6 +51,9 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => UnivProvider()..init(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => SearchProvider()..init(),
+        ),
       ],
       child: const BobMooApp(),
     ),
@@ -62,7 +66,7 @@ class BobMooApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(402, 874),
+      designSize: const Size(360, 800),
       minTextAdapt: true,
       builder: (context, child) {
         return MaterialApp(
@@ -139,7 +143,7 @@ class BobMooApp extends StatelessWidget {
       fontFamily: 'Pretendard',
 
       // 배경색 설정
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: AppColors.colorGray4,
 
       colorScheme: ColorScheme.fromSeed(
         // [기본 설정]
@@ -148,11 +152,8 @@ class BobMooApp extends StatelessWidget {
 
         // [표면/컴포넌트 컬러]
         // surface: 카드, 바텀시트, 다이얼로그의 기본 배경색
-        surface: Colors.white,
-        onSurface: Colors.black,
-
-        // outline: 입력창 테두리, 카드 외곽선, 리스트 구분선
-        outline: AppColors.grayDividerColor,
+        surface: AppColors.colorWhite,
+        onSurface: AppColors.colorBlack,
 
         // 색상 생성 알고리즘을 왜곡없이 그대로 사용
         dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
