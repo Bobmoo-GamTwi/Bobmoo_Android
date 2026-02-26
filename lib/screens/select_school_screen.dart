@@ -148,7 +148,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
       child: TextField(
         onChanged: (value) =>
             context.read<SearchProvider>().updateKeyword(value),
-        autofocus: true,
+        autofocus: false,
         style: AppTypography.search.sb15,
         decoration: InputDecoration(
           hintText: "학교를 검색해 주세요",
