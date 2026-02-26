@@ -2,6 +2,7 @@ import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/services/permission_service.dart';
+import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:home_widget/home_widget.dart';
@@ -162,32 +163,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     final univColor = context.watch<UnivProvider>().univColor;
 
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 70.h,
-        backgroundColor: univColor,
-        elevation: 4.0,
-        shadowColor: Colors.black,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.white,
-            size: 22.w,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          '설정',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-            letterSpacing: 20.sp * 0.03,
-          ),
-        ),
-      ),
+      appBar: _buildAppBar(),
       body: ListView(
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
         children: [
@@ -491,6 +467,56 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      toolbarHeight: 111.h,
+      backgroundColor: AppColors.colorWhite,
+      automaticallyImplyLeading: false, // 기본 leading 끄기
+      title: null,
+      flexibleSpace: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(top: 60.h, left: 10.w, right: 10.w),
+          child: SizedBox(
+            height: 56.h,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Leading
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(
+                      Icons.arrow_back_ios_new,
+                      color: AppColors.colorGray3,
+                      size: 26.w,
+                      weight: 2,
+                    ),
+                  ),
+                ),
+
+                // Title
+                Text(
+                  "설정",
+                  style: AppTypography.head.b21,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(
+          height: 1.h,
+          thickness: 1.h,
+          color: AppColors.colorGray5,
+        ),
       ),
     );
   }
