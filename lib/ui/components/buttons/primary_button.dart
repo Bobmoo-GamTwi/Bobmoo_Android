@@ -19,31 +19,30 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 53.h,
-      width: double.infinity,
-      child: Material(
-        color: AppColors.colorBlack,
-        borderRadius: BorderRadius.circular(15.r),
-        child: InkWell(
-          onTap: isLoading ? null : onTap,
-          borderRadius: BorderRadius.circular(15.r),
-          child: Center(
-            child: isLoading
-                ? SizedBox(
-                    width: 20.w,
-                    height: 20.w,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : Text(
-                    text,
-                    style: AppTypography.head.b21.copyWith(
-                      color: AppColors.colorWhite,
-                    ),
-                  ),
+      width: 294.w,
+      child: FilledButton(
+        onPressed: isLoading ? null : onTap,
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.colorBlack,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15.r),
           ),
         ),
+        child: isLoading
+            ? SizedBox(
+                width: 20.w,
+                height: 20.w,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                text,
+                style: AppTypography.head.b21.copyWith(
+                  color: AppColors.colorWhite,
+                ),
+              ),
       ),
     );
   }
