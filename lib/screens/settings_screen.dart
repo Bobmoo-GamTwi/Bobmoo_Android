@@ -18,7 +18,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen>
     with WidgetsBindingObserver {
-  // initState에서 권한 상태를 가져오기 위해 Future 사용
+  // initState에서 권한 상태를 가져오기 위해 Future 사용 // TODO: 삭제 예정
   late Future<bool> _permissionFuture;
 
   /// 설정에서 1x1 위젯에 대표 식당으로 사용 가능한 전체 식당 리스트
@@ -37,6 +37,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     // 앱 라이프사이클 변경 감지를 위해 옵저버 등록
     WidgetsBinding.instance.addObserver(this);
 
+    // TODO: 삭제 예정
     _permissionFuture = PermissionService.canScheduleExactAlarms();
 
     // 설정 화면에 진입하면 배너 닫힘 상태를 초기화합니다.
@@ -53,6 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     super.dispose();
   }
 
+  // TODO: 삭제 예정
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // 시스템 설정에서 돌아왔을 때 (앱이 다시 활성화될 때)
@@ -75,6 +77,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
+  // TODO: 삭제 예정
   Future<void> _resetBannerDismissalStatus() async {
     final prefs = await SharedPreferences.getInstance();
     // '닫음' 상태를 false로 되돌려서, 홈 화면에서 배너가 다시 보일 수 있도록 함
