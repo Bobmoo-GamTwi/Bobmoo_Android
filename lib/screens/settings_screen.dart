@@ -1,3 +1,4 @@
+import 'package:bobmoo/ui/components/cards/setting_section_card.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
@@ -5,6 +6,7 @@ import 'package:bobmoo/services/permission_service.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -102,7 +104,6 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   Future<void> _saveSelectedCafeteria(
     String cafeteriaName,
-    Color univColor,
   ) async {
     // SharedPreferences 대신 HomeWidget을 사용하여 데이터를 저장합니다.
     await HomeWidget.saveWidgetData<String>(
@@ -137,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         ),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: univColor,
+        backgroundColor: AppColors.colorBlack,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
         ),
@@ -160,105 +161,69 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final univColor = context.watch<UnivProvider>().univColor;
-
     return Scaffold(
       appBar: _buildAppBar(),
       body: ListView(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+        padding: EdgeInsets.symmetric(horizontal: 19.w, vertical: 30.h),
         children: [
-          // --- 학교 설정 섹션 (추후 확장 가능) ---
-          _buildSectionTitle('학교 설정'),
-          SizedBox(height: 12.h),
-
-          // 학교 설정 카드
-          _buildSettingsCard(
-            onTap: _openSelectSchool,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '내 학교 : ${context.watch<UnivProvider>().univName}',
-                  style: TextStyle(
-                    fontSize: 15.sp,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          SettingSectionCard(
+            title: "학교 설정",
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _openSelectSchool,
+                child: Column(
                   children: [
-                    Text(
-                      '학교설정',
-                      style: TextStyle(
-                        fontSize: 17.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          context.watch<UnivProvider>().univName,
+                          style: AppTypography.caption.m15,
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: AppColors.colorGray3,
+                          size: 20.w,
+                        ),
+                      ],
                     ),
-                    Icon(
-                      Icons.chevron_right,
-                      color: AppColors.greyTextColor,
-                      size: 24.w,
+                    SizedBox(height: 3.h),
+                    Divider(
+                      height: 1.h,
+                      thickness: 1.h,
+                      color: AppColors.colorGray5,
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
 
-          SizedBox(height: 32.h),
-
-          // --- 위젯 설정 섹션 ---
-          _buildSectionTitle('위젯 설정'),
-          SizedBox(height: 12.h),
+          SizedBox(height: 20.h),
 
           // 대표 식당 선택 카드
-          _buildSettingsCard(
+          SettingSectionCard(
+            title: "위젯 설정",
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Container(
-                      padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(
-                        color: univColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Icon(
-                        Icons.restaurant_menu,
-                        color: univColor,
-                        size: 22.w,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '2x2 위젯 대표 식당',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
                             '기본 위젯에 표시될 식당을 선택하세요',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: AppColors.greyTextColor,
-                            ),
+                            style: AppTypography.caption.m15,
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 16.h),
+                SizedBox(height: 8.h),
                 // 식당 선택 칩들
                 Wrap(
                   spacing: 8.w,
@@ -266,7 +231,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   children: _cafeteriaList.map((cafeteria) {
                     final isSelected = _selectedCafeteria == cafeteria;
                     return GestureDetector(
-                      onTap: () => _saveSelectedCafeteria(cafeteria, univColor),
+                      onTap: () => _saveSelectedCafeteria(cafeteria),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         padding: EdgeInsets.symmetric(
@@ -274,21 +239,19 @@ class _SettingsScreenState extends State<SettingsScreen>
                           vertical: 10.h,
                         ),
                         decoration: BoxDecoration(
-                          color: isSelected ? univColor : Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(20.r),
-                          border: Border.all(
-                            color: isSelected
-                                ? univColor
-                                : Colors.grey.shade300,
-                            width: 1.5,
-                          ),
+                          color: isSelected
+                              ? AppColors.colorBlack
+                              : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(30.r),
                         ),
                         child: Text(
                           cafeteria,
                           style: TextStyle(
-                            fontSize: 14.sp,
+                            fontSize: 13.sp,
                             fontWeight: FontWeight.w500,
-                            color: isSelected ? Colors.white : Colors.black87,
+                            color: isSelected
+                                ? AppColors.colorWhite
+                                : AppColors.colorBlack,
                           ),
                         ),
                       ),
@@ -299,137 +262,127 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ),
 
-          SizedBox(height: 16.h),
+          SizedBox(height: 20.h),
 
-          // 위젯 실시간 업데이트 카드
-          FutureBuilder<bool>(
-            future: _permissionFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return _buildSettingsCard(
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 20.w,
-                        height: 20.w,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: univColor,
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
-                      Text(
-                        '권한 상태를 확인 중...',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: AppColors.greyTextColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
+          // // 위젯 실시간 업데이트 카드
+          // FutureBuilder<bool>(
+          //   future: _permissionFuture,
+          //   builder: (context, snapshot) {
+          //     if (snapshot.connectionState == ConnectionState.waiting) {
+          //       return _buildSettingsCard(
+          //         child: Row(
+          //           children: [
+          //             SizedBox(
+          //               width: 20.w,
+          //               height: 20.w,
+          //               child: CircularProgressIndicator(
+          //                 strokeWidth: 2,
+          //                 color: univColor,
+          //               ),
+          //             ),
+          //             SizedBox(width: 16.w),
+          //             Text(
+          //               '권한 상태를 확인 중...',
+          //               style: TextStyle(
+          //                 fontSize: 14.sp,
+          //                 color: AppColors.greyTextColor,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       );
+          //     }
 
-              final bool hasPermission = snapshot.data ?? false;
+          //     final bool hasPermission = snapshot.data ?? false;
 
-              return _buildSettingsCard(
-                onTap: () async {
-                  await PermissionService.openAlarmPermissionSettings();
-                  setState(() {
-                    _permissionFuture =
-                        PermissionService.canScheduleExactAlarms();
-                  });
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(
-                        color: hasPermission
-                            ? Colors.green.withValues(alpha: 0.1)
-                            : Colors.orange.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Icon(
-                        hasPermission ? Icons.update : Icons.schedule,
-                        color: hasPermission ? Colors.green : Colors.orange,
-                        size: 22.w,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '위젯 실시간 업데이트',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            hasPermission
-                                ? '활성화됨 · 매분 자동 업데이트'
-                                : '비활성화됨 · 탭하여 권한 설정',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: hasPermission
-                                  ? Colors.green.shade600
-                                  : AppColors.greyTextColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 4.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: hasPermission
-                            ? Colors.green.withValues(alpha: 0.1)
-                            : Colors.orange.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Text(
-                        hasPermission ? 'ON' : 'OFF',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w700,
-                          color: hasPermission ? Colors.green : Colors.orange,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-
-          SizedBox(height: 32.h),
-
-          // --- 앱 정보 섹션 (추후 확장 가능) ---
-          _buildSectionTitle('앱 정보'),
-          SizedBox(height: 12.h),
-
-          _buildSettingsCard(
+          //     return _buildSettingsCard(
+          //       onTap: () async {
+          //         await PermissionService.openAlarmPermissionSettings();
+          //         setState(() {
+          //           _permissionFuture =
+          //               PermissionService.canScheduleExactAlarms();
+          //         });
+          //       },
+          //       child: Row(
+          //         children: [
+          //           Container(
+          //             padding: EdgeInsets.all(8.w),
+          //             decoration: BoxDecoration(
+          //               color: hasPermission
+          //                   ? Colors.green.withValues(alpha: 0.1)
+          //                   : Colors.orange.withValues(alpha: 0.1),
+          //               borderRadius: BorderRadius.circular(8.r),
+          //             ),
+          //             child: Icon(
+          //               hasPermission ? Icons.update : Icons.schedule,
+          //               color: hasPermission ? Colors.green : Colors.orange,
+          //               size: 22.w,
+          //             ),
+          //           ),
+          //           SizedBox(width: 12.w),
+          //           Expanded(
+          //             child: Column(
+          //               crossAxisAlignment: CrossAxisAlignment.start,
+          //               children: [
+          //                 Text(
+          //                   '위젯 실시간 업데이트',
+          //                   style: TextStyle(
+          //                     fontSize: 16.sp,
+          //                     fontWeight: FontWeight.w600,
+          //                     color: Colors.black87,
+          //                   ),
+          //                 ),
+          //                 SizedBox(height: 2.h),
+          //                 Text(
+          //                   hasPermission
+          //                       ? '활성화됨 · 매분 자동 업데이트'
+          //                       : '비활성화됨 · 탭하여 권한 설정',
+          //                   style: TextStyle(
+          //                     fontSize: 12.sp,
+          //                     color: hasPermission
+          //                         ? Colors.green.shade600
+          //                         : AppColors.greyTextColor,
+          //                   ),
+          //                 ),
+          //               ],
+          //             ),
+          //           ),
+          //           Container(
+          //             padding: EdgeInsets.symmetric(
+          //               horizontal: 10.w,
+          //               vertical: 4.h,
+          //             ),
+          //             decoration: BoxDecoration(
+          //               color: hasPermission
+          //                   ? Colors.green.withValues(alpha: 0.1)
+          //                   : Colors.orange.withValues(alpha: 0.1),
+          //               borderRadius: BorderRadius.circular(12.r),
+          //             ),
+          //             child: Text(
+          //               hasPermission ? 'ON' : 'OFF',
+          //               style: TextStyle(
+          //                 fontSize: 12.sp,
+          //                 fontWeight: FontWeight.w700,
+          //                 color: hasPermission ? Colors.green : Colors.orange,
+          //               ),
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //     );
+          //   },
+          // ),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15.r),
+              color: AppColors.colorWhite,
+            ),
+            padding: EdgeInsets.symmetric(vertical: 13.h, horizontal: 10.w),
             child: Row(
               children: [
-                Container(
-                  padding: EdgeInsets.all(8.w),
-                  decoration: BoxDecoration(
-                    color: univColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Icon(
-                    Icons.info_outline,
-                    color: univColor,
-                    size: 22.w,
-                  ),
+                SvgPicture.asset(
+                  'assets/icons/icon_bob.svg',
+                  width: 35.w,
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
@@ -438,29 +391,15 @@ class _SettingsScreenState extends State<SettingsScreen>
                     children: [
                       Text(
                         '밥묵자',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
-                      Text(
-                        '인하대학교 학식 정보 앱',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: AppColors.greyTextColor,
-                        ),
+                        style: AppTypography.caption.m15,
                       ),
                     ],
                   ),
                 ),
                 Text(
                   _appVersion,
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: AppColors.greyTextColor,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.caption.sb11.copyWith(
+                    color: AppColors.colorGray3,
                   ),
                 ),
               ],
@@ -516,43 +455,6 @@ class _SettingsScreenState extends State<SettingsScreen>
           height: 1.h,
           thickness: 1.h,
           color: AppColors.colorGray5,
-        ),
-      ),
-    );
-  }
-
-  /// 섹션 제목 위젯
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: EdgeInsets.only(left: 4.w),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 13.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.greyTextColor,
-          letterSpacing: 13.sp * 0.02,
-        ),
-      ),
-    );
-  }
-
-  /// 설정 카드 위젯
-  Widget _buildSettingsCard({
-    required Widget child,
-    VoidCallback? onTap,
-  }) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16.r),
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.08),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16.r),
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: child,
         ),
       ),
     );
