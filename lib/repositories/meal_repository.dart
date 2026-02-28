@@ -117,7 +117,8 @@ class MealRepository {
       await isar.meals.filter().dateEqualTo(responseDate).deleteAll();
 
       final newMeals = <Meal>[];
-      for (var cafeteria in response.cafeterias) {
+
+      for (var cafeteria in response.schools.cafeterias) {
         final restaurant = await _getOrCreateRestaurant(cafeteria, isToday);
         final meals = _createMealsFromCafeteria(
           cafeteria,

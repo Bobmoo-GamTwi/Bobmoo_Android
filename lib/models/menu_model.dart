@@ -1,24 +1,38 @@
 // 1. 최상위 응답 모델
 class MenuResponse {
   final String date;
-  final String school;
-  final List<Cafeteria> cafeterias;
+  final School schools;
 
   MenuResponse({
     required this.date,
-    required this.school,
-    required this.cafeterias,
+    required this.schools,
   });
 
   factory MenuResponse.fromJson(Map<String, dynamic> json) {
+    return MenuResponse(
+      date: json['date'],
+      schools: School.fromJson(json['schools']),
+    );
+  }
+}
+
+class School {
+  final String schoolName;
+  final List<Cafeteria> cafeterias;
+
+  School({
+    required this.schoolName,
+    required this.cafeterias,
+  });
+
+  factory School.fromJson(Map<String, dynamic> json) {
     // 'cafeterias' 배열을 Cafeteria 객체 리스트로 변환
     var cafeteriaList = (json['cafeterias'] as List)
         .map((item) => Cafeteria.fromJson(item))
         .toList();
 
-    return MenuResponse(
-      date: json['date'],
-      school: json['school'],
+    return School(
+      schoolName: json['schoolName'],
       cafeterias: cafeteriaList,
     );
   }
