@@ -6,7 +6,7 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import com.hwoo.bobmoo.widget.data.AllCafeteriasDataParser
-import com.hwoo.bobmoo.widget.data.MealWidgetDataParser
+import com.hwoo.bobmoo.widget.data.MealInfo
 import com.hwoo.bobmoo.widget.ui.MealWidgetContent
 import es.antonborri.home_widget.HomeWidgetPlugin
 import java.util.Calendar
@@ -45,10 +45,8 @@ class MealGlanceWidget : GlanceAppWidget() {
                 // 일치하는 식당 정보를 찾았으면, 기존 UI에 그대로 전달합니다.
                 MealWidgetContent(context = context, mealInfo = targetMealInfo)
             } else {
-                // 표시할 데이터가 아무것도 없는 경우 (초기 상태 등)
-                // MealWidgetDataParser의 기본값을 활용할 수 있습니다.
-                val defaultInfo = MealWidgetDataParser.parseMealInfo(null, now)
-                MealWidgetContent(context = context, mealInfo = defaultInfo)
+                // 표시할 데이터가 없으면 명시적 빈 상태 모델을 사용합니다.
+                MealWidgetContent(context = context, mealInfo = MealInfo.empty())
             }
         }
     }

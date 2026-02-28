@@ -6,30 +6,40 @@ import java.util.Calendar
 
 // 위젯에 표시될 정보를 담는 데이터 클래스
 data class MealInfo(
+    val dateLabel: String,
     val periodLabel: String,
     val hoursLabel: String,
     val cafeteriaName: String,
     val courses: List<String>,
-    val status: String
-)
+    val status: String,
+    val isEmptyState: Boolean = false
+) {
+    companion object {
+        fun empty(): MealInfo = MealInfo(
+            dateLabel = "",
+            periodLabel = "",
+            hoursLabel = "",
+            cafeteriaName = "",
+            courses = emptyList(),
+            status = "",
+            isEmptyState = true
+        )
+    }
+}
 
 object MealWidgetDataParser {
 
     private enum class MealPeriod { BREAKFAST, LUNCH, DINNER }
+    private data class PeriodSelection(val period: MealPeriod, val status: String)
 
     fun parseMealInfo(data: String?, now: Calendar): MealInfo {
         if (data == null) {
-            return MealInfo(
-                periodLabel = "어라..?",
-                hoursLabel = "--:--",
-                cafeteriaName = "식단 정보가 없어요 😢",
-                courses = listOf("오늘은 운영하지 않거나", "아직 등록 전일 수 있어요."),
-                status = ""
-            )
+            return MealInfo.empty()
         }
 
         try {
             val root = JSONObject(data)
+            val dateLabel = root.optString("date", "")
             val cafeteriaName = root.optString("cafeteriaName", "식당 정보 없음")
 
             val hours = root.optJSONObject("hours")
@@ -42,12 +52,19 @@ object MealWidgetDataParser {
             val lunch = meals?.optJSONArray("lunch") ?: JSONArray()
             val dinner = meals?.optJSONArray("dinner") ?: JSONArray()
 
-            val (target, targetStatus) = selectTargetPeriod(
+            val currentSelection = selectTargetPeriod(
                 now,
                 breakfastHours,
                 lunchHours,
                 dinnerHours
             )
+
+            val target = selectDisplayPeriod(
+                currentPeriod = currentSelection.period,
+                breakfast = breakfast,
+                lunch = lunch,
+                dinner = dinner
+            ) ?: return MealInfo.empty()
 
             val periodLabel: String
             val hoursLabel: String
@@ -74,21 +91,17 @@ object MealWidgetDataParser {
             }
 
             return MealInfo(
+                dateLabel,
                 periodLabel,
                 hoursLabel,
                 cafeteriaName,
                 courses,
-                targetStatus
+                currentSelection.status,
+                isEmptyState = false
             )
 
         } catch (e: Exception) {
-            return MealInfo(
-                periodLabel = "데이터 오류",
-                hoursLabel = "--:--",
-                cafeteriaName = "",
-                courses = listOf("데이터 포맷 오류"),
-                status = ""
-            )
+            return MealInfo.empty()
         }
     }
 
@@ -97,20 +110,42 @@ object MealWidgetDataParser {
         breakfastHours: String,
         lunchHours: String,
         dinnerHours: String,
-    ): Pair<MealPeriod, String> {
+    ): PeriodSelection {
         val b = parseHoursToToday(now, breakfastHours)
         val l = parseHoursToToday(now, lunchHours)
         val d = parseHoursToToday(now, dinnerHours)
 
         return when {
-            now.before(b.first) -> MealPeriod.BREAKFAST to "운영전"
-            now.after(b.first) && now.before(b.second) -> MealPeriod.BREAKFAST to "운영중"
-            now.after(b.second) && now.before(l.first) -> MealPeriod.LUNCH to "운영전"
-            now.after(l.first) && now.before(l.second) -> MealPeriod.LUNCH to "운영중"
-            now.after(l.second) && now.before(d.first) -> MealPeriod.DINNER to "운영전"
-            now.after(d.first) && now.before(d.second) -> MealPeriod.DINNER to "운영중"
-            else -> MealPeriod.DINNER to "운영종료"
+            now.before(b.first) -> PeriodSelection(MealPeriod.BREAKFAST, "운영전")
+            now.after(b.first) && now.before(b.second) -> PeriodSelection(MealPeriod.BREAKFAST, "운영중")
+            now.after(b.second) && now.before(l.first) -> PeriodSelection(MealPeriod.LUNCH, "운영전")
+            now.after(l.first) && now.before(l.second) -> PeriodSelection(MealPeriod.LUNCH, "운영중")
+            now.after(l.second) && now.before(d.first) -> PeriodSelection(MealPeriod.DINNER, "운영전")
+            now.after(d.first) && now.before(d.second) -> PeriodSelection(MealPeriod.DINNER, "운영중")
+            else -> PeriodSelection(MealPeriod.DINNER, "운영종료")
         }
+    }
+
+    private fun selectDisplayPeriod(
+        currentPeriod: MealPeriod,
+        breakfast: JSONArray,
+        lunch: JSONArray,
+        dinner: JSONArray
+    ): MealPeriod? {
+        fun hasMeals(period: MealPeriod): Boolean = when (period) {
+            MealPeriod.BREAKFAST -> breakfast.length() > 0
+            MealPeriod.LUNCH -> lunch.length() > 0
+            MealPeriod.DINNER -> dinner.length() > 0
+        }
+
+        val orderedCandidates = when (currentPeriod) {
+            // 현재 -> 과거(가까운 순) -> 미래
+            MealPeriod.BREAKFAST -> listOf(MealPeriod.BREAKFAST, MealPeriod.LUNCH, MealPeriod.DINNER)
+            MealPeriod.LUNCH -> listOf(MealPeriod.LUNCH, MealPeriod.BREAKFAST, MealPeriod.DINNER)
+            MealPeriod.DINNER -> listOf(MealPeriod.DINNER, MealPeriod.LUNCH, MealPeriod.BREAKFAST)
+        }
+
+        return orderedCandidates.firstOrNull { hasMeals(it) }
     }
 
     private fun parseHoursToToday(base: Calendar, hours: String): Pair<Calendar, Calendar> {
@@ -158,6 +193,6 @@ object MealWidgetDataParser {
                 // 개별 메뉴 파싱 실패 시 무시
             }
         }
-        return if (courses.isEmpty()) listOf("메뉴 정보 없음") else courses
+        return courses
     }
 }
