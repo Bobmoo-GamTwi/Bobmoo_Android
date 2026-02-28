@@ -139,7 +139,7 @@ void main() {
       // 2. 최상위 데이터가 올바른지 확인
       expect(menuResponse.date, '2025-09-16');
       // 3. 리스트의 길이가 올바른지 확인
-      expect(menuResponse.cafeterias.length, 3);
+      expect(menuResponse.schools.cafeterias.length, 3);
     });
 
     // 두 번째 테스트: 중첩된 데이터가 올바르게 파싱되는가?
@@ -148,7 +148,7 @@ void main() {
       final menuResponse = MenuResponse.fromJson(jsonDecode(testJsonData));
 
       // 검증
-      final studentCafeteria = menuResponse.cafeterias[1];
+      final studentCafeteria = menuResponse.schools.cafeterias[1];
       // 1. 식당 이름 확인
       expect(studentCafeteria.name, '학생식당');
       // 2. 운영 시간 확인
