@@ -75,12 +75,24 @@ class BobMooApp extends StatelessWidget {
           initialRoute: "/",
           onGenerateRoute: (settings) {
             final rawRouteName = settings.name;
+            final isWidgetCallbackRoute = () {
+              if (rawRouteName == null || rawRouteName.isEmpty) {
+                return true;
+              }
+              if (rawRouteName.startsWith('/CALLBACK')) {
+                return true;
+              }
+
+              final uri = Uri.tryParse(rawRouteName);
+              if ((uri?.path ?? '').toUpperCase().startsWith('/CALLBACK')) {
+                return true;
+              }
+
+              // Glance 위젯 액션(e.g. glance-action:/CALLBACK?...) fallback
+              return rawRouteName.toUpperCase().contains(':/CALLBACK');
+            }();
             final normalizedRouteName =
-                (rawRouteName == null ||
-                    rawRouteName.isEmpty ||
-                    rawRouteName.startsWith('/CALLBACK'))
-                ? "/"
-                : rawRouteName;
+                isWidgetCallbackRoute ? "/" : rawRouteName;
 
             if (kDebugMode) {
               debugPrint(
