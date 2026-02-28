@@ -14,7 +14,7 @@ import 'package:bobmoo/services/permission_service.dart';
 import 'package:bobmoo/services/widget_service.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/utils/meal_utils.dart';
-import 'package:bobmoo/widgets/time_grouped_card.dart';
+import 'package:bobmoo/ui/components/cards/time_grouped_card.dart';
 import 'package:bobmoo/utils/hours_parser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
