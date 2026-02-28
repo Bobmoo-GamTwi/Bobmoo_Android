@@ -24,7 +24,12 @@ class TimeGroupedCard extends StatelessWidget {
       shadowColor: Colors.black.withValues(alpha: 0.5),
       elevation: 4,
       child: Padding(
-        padding: EdgeInsets.all(13.w),
+        padding: EdgeInsets.only(
+          top: 15.h,
+          bottom: 5.h,
+          left: 13.w,
+          right: 13.w,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -44,7 +49,7 @@ class TimeGroupedCard extends StatelessWidget {
               itemBuilder: (BuildContext context, int index) {
                 // 각 인덱스에 해당하는 식당 메뉴 위젯을 반환
                 return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 3.w),
+                  padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
                   child: CafeteriaMenuColumn(
                     data: mealData[index],
                     mealType: title,
