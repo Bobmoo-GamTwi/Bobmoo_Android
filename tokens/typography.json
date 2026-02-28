@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "version": 1,
+    "fontFamily": "Pretendard"
+  },
+  "tokens": {
+    "head.b48": {
+      "fontSize": 48,
+      "fontWeight": 700,
+      "letterSpacingPercent": 0.04
+    },
+    "head.b30": {
+      "fontSize": 30,
+      "fontWeight": 700,
+      "letterSpacingPercent": 0.04
+    },
+    "head.b21": {
+      "fontSize": 21,
+      "fontWeight": 700,
+      "letterSpacingPercent": 0.05
+    },
+    "head.sb18": {
+      "fontSize": 18,
+      "fontWeight": 600,
+      "letterSpacingPercent": 0.05
+    },
+    "caption.m15": {
+      "fontSize": 15,
+      "fontWeight": 500,
+      "letterSpacingPercent": 0.02
+    },
+    "caption.r15": {
+      "fontSize": 15,
+      "fontWeight": 400,
+      "letterSpacingPercent": 0.02
+    },
+    "caption.sb11": {
+      "fontSize": 11,
+      "fontWeight": 600,
+      "letterSpacingPercent": 0.02
+    },
+    "caption.sb9": {
+      "fontSize": 9,
+      "fontWeight": 600,
+      "letterSpacingPercent": 0.02
+    },
+    "button.sb12": {
+      "fontSize": 12,
+      "fontWeight": 600,
+      "letterSpacingPercent": 0.02
+    },
+    "button.sb11": {
+      "fontSize": 11,
+      "fontWeight": 600,
+      "letterSpacingPercent": 0.04
+    },
+    "search.b17": {
+      "fontSize": 17,
+      "fontWeight": 700,
+      "letterSpacingPercent": 0.04
+    },
+    "search.b15": {
+      "fontSize": 15,
+      "fontWeight": 700,
+      "letterSpacingPercent": 0.02
+    },
+    "search.sb15": {
+      "fontSize": 15,
+      "fontWeight": 600,
+      "letterSpacingPercent": 0.02
+    },
+    "search.sb12": {
+      "fontSize": 12,
+      "fontWeight": 600,
+      "letterSpacingPercent": 0.02
+    },
+    "widget.sb14": {
+      "fontSize": 14,
+      "fontWeight": 600,
+      "letterSpacingPercent": 0.05
+    },
+    "widget.sb12": {
+      "fontSize": 12,
+      "fontWeight": 600,
+      "letterSpacingPercent": 0.05
+    },
+    "widget.sb7": {
+      "fontSize": 7,
+      "fontWeight": 600,
+      "letterSpacingPercent": 0.02
+    },
+    "widget.m11": {
+      "fontSize": 11,
+      "fontWeight": 500,
+      "letterSpacingPercent": 0.02
+    },
+    "widget.r11": {
+      "fontSize": 11,
+      "fontWeight": 400,
+      "letterSpacingPercent": 0.02
+    }
+  }
+}

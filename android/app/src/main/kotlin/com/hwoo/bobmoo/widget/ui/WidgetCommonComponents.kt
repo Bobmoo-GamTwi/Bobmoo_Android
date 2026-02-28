@@ -3,12 +3,12 @@ package com.hwoo.bobmoo.widget.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
+import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -18,11 +18,10 @@ import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
-import androidx.glance.text.TextStyle
 import com.hwoo.bobmoo.widget.RefreshWidgetAction
 import com.hwoo.bobmoo.widget.data.MealInfo
+import com.hwoo.bobmoo.widget.theme.TypographyTokens
 
 /**
  * 최상단 헤더
@@ -35,19 +34,18 @@ fun WidgetHeader(currentTime: String) {
     ) {
         Text(
             text = currentTime,
-            style = TextStyle(
-                fontSize = 12.sp,
-                color = androidx.glance.color.ColorProvider(Color.Gray, Color.Gray)
+            style = TypographyTokens.textStyle(
+                key = "widget.m11",
+                color = ColorProvider(Color.Gray, Color.Gray)
             )
         )
         Spacer(modifier = GlanceModifier.defaultWeight())
         Text(
             text = "새로고침",
             modifier = GlanceModifier.clickable(onClick = actionRunCallback<RefreshWidgetAction>()),
-            style = TextStyle(
-                fontSize = 12.sp,
-                color = androidx.glance.color.ColorProvider(Color(0xFF4D89B2), Color(0xFF4D89B2)),
-                fontWeight = FontWeight.Bold
+            style = TypographyTokens.textStyle(
+                key = "button.sb12",
+                color = ColorProvider(Color(0xFF4D89B2), Color(0xFF4D89B2))
             )
         )
     }
@@ -77,10 +75,7 @@ fun MealPeriodHeader(periodLabel: String, globalStatus: String) {
         // "아침", "점심" 등 시간대 텍스트
         Text(
             text = periodLabel,
-            style = TextStyle(
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
+            style = TypographyTokens.textStyle(key = "head.b21")
         )
         Spacer(modifier = GlanceModifier.defaultWeight())
 
@@ -96,13 +91,9 @@ fun MealPeriodHeader(periodLabel: String, globalStatus: String) {
             ) {
                 Text(
                     text = globalStatus,
-                    style = TextStyle(
-                        color = androidx.glance.color.ColorProvider(
-                            statusColors.text,
-                            statusColors.text
-                        ),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
+                    style = TypographyTokens.textStyle(
+                        key = "button.sb11",
+                        color = ColorProvider(statusColors.text, statusColors.text)
                     )
                 )
             }
@@ -135,15 +126,15 @@ fun CafeteriaColumn(
     ) {
         Text(
             text = mealInfo.cafeteriaName,
-            style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold),
+            style = TypographyTokens.textStyle(key = "widget.sb14"),
             maxLines = 1
         )
         Spacer(modifier = GlanceModifier.height(2.dp))
         Text(
             text = "(${mealInfo.hoursLabel})",
-            style = TextStyle(
-                fontSize = 12.sp,
-                color = androidx.glance.color.ColorProvider(Color.Gray, Color.Gray)
+            style = TypographyTokens.textStyle(
+                key = "widget.sb12",
+                color = ColorProvider(Color.Gray, Color.Gray)
             ),
             maxLines = 1
         )
@@ -152,7 +143,7 @@ fun CafeteriaColumn(
         mealInfo.courses.forEach { line ->
             Text(
                 text = line,
-                style = TextStyle(fontSize = 13.sp),
+                style = TypographyTokens.textStyle(key = "widget.sb12"),
                 modifier = GlanceModifier.padding(top = 2.dp),
                 maxLines = calculatedMaxLines
             )
