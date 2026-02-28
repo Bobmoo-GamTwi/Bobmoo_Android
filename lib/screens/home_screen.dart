@@ -34,6 +34,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final MealRepository _repository = locator<MealRepository>();
   late Future<List<Meal>> _mealFuture;
+  DateTime? _lastWidgetUpdateAt;
+  static const Duration _widgetUpdateMinInterval = Duration(seconds: 30);
+  bool _isWidgetUpdateInProgress = false;
 
   /// 선택한 날짜 저장할 상태 변수
   DateTime _selectedDate = DateTime.now();
@@ -48,9 +51,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _checkForUpdate();
     // initState에서는 setState를 호출하지 않고, Future를 직접 할당합니다.
     _mealFuture = _fetchData();
-
-    // 앱 시작 시에도 위젯 업데이트
-    _updateWidgetOnly();
   }
 
   /// 위젯이 영구적으로 제거될때 호출
@@ -114,8 +114,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     try {
       final meals = await _repository.getMealsForDate(_selectedDate);
 
-      // 데이터 로딩 시에도 조건부 위젯 업데이트
-      _updateWidgetOnly();
+      // 위젯은 "오늘" 데이터만 사용합니다. 오늘 데이터가 있으면 재조회 없이 재사용합니다.
+      _updateWidgetOnly(
+        todayMeals: _isSameDay(_selectedDate, DateTime.now()) ? meals : null,
+      );
 
       return meals;
     } catch (e) {
@@ -134,15 +136,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   /// 위젯 데이터 업데이트 함수 (오늘날짜)
-  Future<void> _updateWidgetOnly() async {
+  Future<void> _updateWidgetOnly({List<Meal>? todayMeals}) async {
+    if (_isWidgetUpdateInProgress) {
+      if (kDebugMode) {
+        debugPrint('위젯 업데이트 스킵: 이전 작업 진행 중');
+      }
+      return;
+    }
+
+    final nowForDebounce = DateTime.now();
+    if (_lastWidgetUpdateAt != null &&
+        nowForDebounce.difference(_lastWidgetUpdateAt!) <
+            _widgetUpdateMinInterval) {
+      if (kDebugMode) {
+        debugPrint('위젯 업데이트 스킵: 너무 짧은 간격');
+      }
+      return;
+    }
+    _lastWidgetUpdateAt = nowForDebounce;
+    _isWidgetUpdateInProgress = true;
+
     // 오늘 날짜인 경우에만 위젯 업데이트
     try {
-      final today = DateTime.now();
-      // 1. 오늘 날짜의 메뉴 데이터 가져오기
-      final todayMeals = await _repository.getMealsForDate(today);
+      // 1. 오늘 날짜의 메뉴 데이터 가져오기 (인자로 들어오면 재사용)
+      final mealsForWidget =
+          todayMeals ?? await _repository.getMealsForDate(DateTime.now());
 
       // 2. 데이터를 시간대별로 그룹화
-      final groupedMeals = groupMeals(todayMeals);
+      final groupedMeals = groupMeals(mealsForWidget);
 
       // 3. 오늘 운영하는 모든 식당의 고유한 이름과 정보(Hours)를 추출
       final Map<String, Hours> uniqueCafeterias = {};
@@ -160,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
         // 기존 fromGrouped 팩토리 생성자를 완벽하게 재사용
         final widgetData = MealWidgetData.fromGrouped(
-          date: DateFormat('yyyy-MM-dd').format(today),
+          date: DateFormat('yyyy-MM-dd').format(DateTime.now()),
           cafeteriaName: cafeteriaName,
           grouped: groupedMeals.map((k, v) => MapEntry(k, v)),
           hours: hours,
@@ -188,7 +209,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (kDebugMode) {
         debugPrint('위젯 업데이트 실패: $e');
       }
+    } finally {
+      _isWidgetUpdateInProgress = false;
     }
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   /// StaleDataException 발생 시 SnackBar를 띄우는 헬퍼 함수
