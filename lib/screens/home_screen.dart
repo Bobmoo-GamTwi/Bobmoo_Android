@@ -12,6 +12,7 @@ import 'package:bobmoo/models/meal_widget_data.dart';
 import 'package:bobmoo/screens/settings_screen.dart';
 import 'package:bobmoo/services/permission_service.dart';
 import 'package:bobmoo/services/widget_service.dart';
+import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/utils/meal_utils.dart';
 import 'package:bobmoo/widgets/time_grouped_card.dart';
 import 'package:bobmoo/utils/hours_parser.dart';
@@ -539,11 +540,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   PreferredSizeWidget _buildAppBar() {
-    final String univName = context.watch<UnivProvider>().univName;
+    final UnivProvider univProvider = context.watch<UnivProvider>();
 
     return AppBar(
-      toolbarHeight: 103.h,
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      toolbarHeight: 140.h,
+      backgroundColor: univProvider.univColor,
       shadowColor: Colors.black,
       elevation: 4.0,
       surfaceTintColor: Colors.transparent,
@@ -552,56 +553,44 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       centerTitle: false,
       // Appbar의 기본 여백 제거
       titleSpacing: 0,
-      actionsPadding: EdgeInsets.only(right: 26.w),
+      actionsPadding: EdgeInsets.only(right: 24.w),
       title: Padding(
-        padding: EdgeInsets.only(left: 26.w),
+        padding: EdgeInsets.only(left: 20.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20.h),
+            SizedBox(height: 45.h),
             // 앱의 왼쪽 위
             Text(
-              univName,
-              style: TextStyle(
-                color: Colors.white,
-                // 자간 5% (픽셀 계산)
-                letterSpacing: 30.sp * 0.05,
-                // 행간 170%
-                height: 1.7,
-                fontWeight: FontWeight.w700,
-                fontSize: 30.sp,
+              univProvider.univName,
+              style: AppTypography.head.b30.copyWith(
+                color: AppColors.colorWhite,
               ),
             ),
+            SizedBox(height: 9.h),
             TextButton(
               style: TextButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                backgroundColor: AppColors.colorWhite10,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(59.r),
                 ),
                 padding: EdgeInsets.symmetric(
-                  horizontal: 7.w,
-                  vertical: 2.h,
+                  horizontal: 12.w,
+                  vertical: 1.h,
                 ),
                 minimumSize: Size.zero, // 최소 사이즈 제거
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap, // 탭 영역을 최소화
               ),
               onPressed: () => _selectDate(context), // 탭하면 _selectDate 함수 호출
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    DateFormat(
-                      'yyyy년 MM월 dd일 (E)',
-                      'ko_KR',
-                    ).format(_selectedDate), // 날짜 포맷
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+              child: Text(
+                DateFormat(
+                  'yyyy년 MM월 dd일 (E)',
+                  'ko_KR',
+                ).format(_selectedDate), // 날짜 포맷
+                style: AppTypography.caption.sb11.copyWith(
+                  color: AppColors.colorWhite,
+                ),
               ),
             ),
             SizedBox(
