@@ -593,34 +593,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           // iconSize: 33.w,
           tooltip: '설정', // 풍선 도움말
           onPressed: () {
-            Navigator.of(context)
-                .push(
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        const SettingsScreen(),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                          const begin = Offset(1.0, 0.0); // 오른쪽에서 시작
-                          const end = Offset.zero; // 원래 위치로 이동
-                          const curve = Curves.ease; // 부드러운 전환 효과
+            Navigator.of(context).push(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    const SettingsScreen(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                      const begin = Offset(1.0, 0.0); // 오른쪽에서 시작
+                      const end = Offset.zero; // 원래 위치로 이동
+                      const curve = Curves.ease; // 부드러운 전환 효과
 
-                          var tween = Tween(
-                            begin: begin,
-                            end: end,
-                          ).chain(CurveTween(curve: curve));
-                          var offsetAnimation = animation.drive(tween);
+                      var tween = Tween(
+                        begin: begin,
+                        end: end,
+                      ).chain(CurveTween(curve: curve));
+                      var offsetAnimation = animation.drive(tween);
 
-                          return SlideTransition(
-                            position: offsetAnimation,
-                            child: child,
-                          );
-                        },
-                  ),
-                )
-                .then((_) {
-                  // 설정 화면에서 돌아왔을 때 배너 상태 다시 체크
-                  _checkPermissionAndShowBanner();
-                });
+                      return SlideTransition(
+                        position: offsetAnimation,
+                        child: child,
+                      );
+                    },
+              ),
+            );
           },
           padding: EdgeInsets.zero, // 내부 패딩 제거
           constraints: const BoxConstraints(), // 최소 크기 제한(48px) 제거
