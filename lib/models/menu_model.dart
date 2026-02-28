@@ -1,7 +1,7 @@
 // 1. 최상위 응답 모델
 class MenuResponse {
   final String date;
-  final List<School> schools;
+  final School schools;
 
   MenuResponse({
     required this.date,
@@ -9,13 +9,9 @@ class MenuResponse {
   });
 
   factory MenuResponse.fromJson(Map<String, dynamic> json) {
-    var schoolList = (json['schools'] as List)
-        .map((item) => School.fromJson(item))
-        .toList();
-
     return MenuResponse(
       date: json['date'],
-      schools: schoolList,
+      schools: School.fromJson(json['schools']),
     );
   }
 }
