@@ -1,5 +1,6 @@
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/menu_model.dart';
+import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:bobmoo/utils/hours_parser.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -73,21 +74,16 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 1.5.h),
+      padding: EdgeInsets.symmetric(vertical: 1.5.h, horizontal: 10.w),
+      height: 24.h,
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(24.r),
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11.sp,
-          fontWeight: FontWeight.w500,
-          // 자간 4%
-          letterSpacing: 11.sp * 0.04,
-          // 행간 21px
-          height: 2.0,
-          color: textColor,
+      child: Center(
+        child: Text(
+          text,
+          style: AppTypography.button.sb11.copyWith(color: textColor),
         ),
       ),
     );

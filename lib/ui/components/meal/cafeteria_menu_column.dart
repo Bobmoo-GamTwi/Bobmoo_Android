@@ -1,7 +1,8 @@
 import 'package:bobmoo/models/meal_by_cafeteria.dart';
 import 'package:bobmoo/models/menu_model.dart';
-import 'package:bobmoo/widgets/meal_item_row.dart';
-import 'package:bobmoo/widgets/open_status_badge.dart';
+import 'package:bobmoo/ui/components/meal/meal_item_row.dart';
+import 'package:bobmoo/ui/components/meal/open_status_badge.dart';
+import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -29,24 +30,13 @@ class CafeteriaMenuColumn extends StatelessWidget {
           children: [
             Text(
               data.cafeteriaName,
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-                // 자간 5%
-                letterSpacing: 18.sp * 0.05,
-                // 행간 170%
-                height: 1.7,
-              ),
+              style: AppTypography.head.sb18,
             ),
-            SizedBox(width: 3.w),
+            SizedBox(width: 5.w),
             Expanded(
               child: Text(
                 _hoursTextForMealType(data.hours, mealType),
-                style: TextStyle(
-                  fontSize: 9.sp,
-                  color: Colors.black54,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTypography.caption.sb9,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -57,9 +47,22 @@ class CafeteriaMenuColumn extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: 3.h),
         // 식당의 메뉴들
-        ...data.meals.map((meal) => MealItemRow(meal: meal)),
+        ListView.builder(
+          padding: EdgeInsets.zero,
+          // 내용만큼 크기를 줄이도록 설정
+          shrinkWrap: true,
+          // 스크롤 방지
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: data.meals.length,
+          itemBuilder: (BuildContext context, int index) {
+            // 각 인덱스에 해당하는 식당 메뉴 위젯을 반환
+            return Padding(
+              padding: EdgeInsets.all(3.w),
+              child: MealItemRow(meal: data.meals[index]),
+            );
+          },
+        ),
       ],
     );
   }

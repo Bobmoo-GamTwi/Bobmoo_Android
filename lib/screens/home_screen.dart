@@ -12,12 +12,15 @@ import 'package:bobmoo/models/meal_widget_data.dart';
 import 'package:bobmoo/screens/settings_screen.dart';
 import 'package:bobmoo/services/permission_service.dart';
 import 'package:bobmoo/services/widget_service.dart';
+import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/utils/meal_utils.dart';
-import 'package:bobmoo/widgets/time_grouped_card.dart';
+import 'package:bobmoo/ui/components/cards/time_grouped_card.dart';
 import 'package:bobmoo/utils/hours_parser.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -402,82 +405,67 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildEmptyState() {
-    final Color univColor = context.watch<UnivProvider>().univColor;
-
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(32.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 아이콘
-            Container(
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: univColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.restaurant_menu,
-                size: 48.w,
-                color: univColor,
-              ),
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.all(24.w),
+      decoration: BoxDecoration(
+        color: AppColors.colorWhite,
+        borderRadius: BorderRadius.circular(15.r),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 아이콘
+          SvgPicture.asset(
+            'assets/icons/icon_bob.svg',
+            width: 60.w,
+          ),
+          SizedBox(height: 24.h),
+          // 제목
+          Text(
+            '등록된 식단이 없어요',
+            style: AppTypography.head.sb18,
+          ),
+          SizedBox(height: 21.h),
+          // 설명
+          Text(
+            '식단 정보가 등록되지 않았어요.',
+            textAlign: TextAlign.center,
+            style: AppTypography.search.sb15.copyWith(
+              color: AppColors.colorGray3,
             ),
-            SizedBox(height: 24.h),
-            // 제목
-            Text(
-              '등록된 식단이 없어요',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
+          ),
+          SizedBox(
+            height: 4.h,
+          ),
+          Text(
+            '잠시 후 다시 확인해주세요.',
+            textAlign: TextAlign.center,
+            style: AppTypography.search.sb15.copyWith(
+              color: AppColors.colorGray3,
             ),
-            SizedBox(height: 8.h),
-            // 설명
-            Text(
-              '아직 오늘의 메뉴가 등록되지 않았습니다.\n잠시 후 다시 확인해주세요.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.greyTextColor,
-                height: 1.5,
+          ),
+          SizedBox(height: 118.h),
+          // 아래로 당겨 새로고침
+          Column(
+            children: [
+              Icon(
+                Icons.arrow_downward,
+                color: AppColors.colorGray3,
+                size: 32.w,
               ),
-            ),
-            SizedBox(height: 24.h),
-            // 새로고침 버튼
-            TextButton(
-              onPressed: () => setState(() {
-                _refreshMeals();
-              }),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: univColor,
-                padding: EdgeInsets.symmetric(
-                  horizontal: 24.w,
-                  vertical: 12.h,
+              SizedBox(
+                height: 7.h,
+              ),
+              Text(
+                "아래로 당겨 새로고침",
+                style: AppTypography.button.sb11.copyWith(
+                  color: AppColors.colorGray3,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24.r),
-                ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.refresh, size: 18.w),
-                  SizedBox(width: 8.w),
-                  Text(
-                    '새로고침',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -487,14 +475,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final groupedMeals = groupMeals(meals);
     final mealTypes = _orderedMealTypesByDynamicHours(groupedMeals);
 
-    return RefreshIndicator(
-      onRefresh: _refreshMeals, // 당겨서 새로고침 기능 연결
-      child: ListView.builder(
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(
+        horizontal: 21.w,
+        vertical: 23.h,
+      ),
+      sliver: SliverList.builder(
         itemCount: mealTypes.length,
-        padding: EdgeInsets.symmetric(
-          horizontal: 21.w,
-          vertical: 23.h,
-        ),
+
         itemBuilder: (context, index) {
           final mealType = mealTypes[index];
           final mealsByCafeteria = groupedMeals[mealType];
@@ -519,31 +507,64 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return FutureBuilder<List<Meal>>(
       future: _mealFuture,
       builder: (context, snapshot) {
-        // 로딩 중
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        // 에러 발생
-        if (snapshot.hasError) {
-          return _buildErrorWidget(snapshot.error!);
-        }
-        // 데이터 없을 시 비어있음 표시
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyState();
-        }
-
-        // 데이터 로딩 성공 -> MealList 위젯 생성
-        return _buildMealList(snapshot.data!);
+        return CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          slivers: [
+            CupertinoSliverRefreshControl(
+              onRefresh: _refreshMeals,
+              builder:
+                  (
+                    context,
+                    refreshState,
+                    pulledExtent,
+                    refreshTriggerPullDistance,
+                    refreshIndicatorExtent,
+                  ) {
+                    return Container(
+                      margin: const EdgeInsets.all(20),
+                      padding: EdgeInsets.all(33.h),
+                      child: CupertinoActivityIndicator(
+                        radius: 10.r,
+                      ),
+                    );
+                  },
+            ),
+            // 케이스별로 다른 Sliver 추가
+            // 로딩 중
+            if (snapshot.connectionState == ConnectionState.waiting)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: const Center(child: CircularProgressIndicator()),
+              )
+            // 에러 발생
+            else if (snapshot.hasError)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _buildErrorWidget(snapshot.error!),
+              )
+            // 데이터 없을 시 비어있음 표시
+            else if (!snapshot.hasData || snapshot.data!.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _buildEmptyState(),
+              )
+            // 데이터 로딩 성공 -> MealList 위젯 생성
+            else
+              _buildMealList(snapshot.data!), // Sliver 직접 추가
+          ],
+        );
       },
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
-    final String univName = context.watch<UnivProvider>().univName;
+    final UnivProvider univProvider = context.watch<UnivProvider>();
 
     return AppBar(
-      toolbarHeight: 103.h,
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      toolbarHeight: 140.h,
+      backgroundColor: univProvider.univColor,
       shadowColor: Colors.black,
       elevation: 4.0,
       surfaceTintColor: Colors.transparent,
@@ -552,56 +573,44 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       centerTitle: false,
       // Appbar의 기본 여백 제거
       titleSpacing: 0,
-      actionsPadding: EdgeInsets.only(right: 26.w),
+      actionsPadding: EdgeInsets.only(right: 24.w),
       title: Padding(
-        padding: EdgeInsets.only(left: 26.w),
+        padding: EdgeInsets.only(left: 20.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20.h),
+            SizedBox(height: 45.h),
             // 앱의 왼쪽 위
             Text(
-              univName,
-              style: TextStyle(
-                color: Colors.white,
-                // 자간 5% (픽셀 계산)
-                letterSpacing: 30.sp * 0.05,
-                // 행간 170%
-                height: 1.7,
-                fontWeight: FontWeight.w700,
-                fontSize: 30.sp,
+              univProvider.univName,
+              style: AppTypography.head.b30.copyWith(
+                color: AppColors.colorWhite,
               ),
             ),
+            SizedBox(height: 9.h),
             TextButton(
               style: TextButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                backgroundColor: AppColors.colorWhite10,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(59.r),
                 ),
                 padding: EdgeInsets.symmetric(
-                  horizontal: 7.w,
-                  vertical: 2.h,
+                  horizontal: 12.w,
+                  vertical: 1.h,
                 ),
                 minimumSize: Size.zero, // 최소 사이즈 제거
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap, // 탭 영역을 최소화
               ),
               onPressed: () => _selectDate(context), // 탭하면 _selectDate 함수 호출
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    DateFormat(
-                      'yyyy년 MM월 dd일 (E)',
-                      'ko_KR',
-                    ).format(_selectedDate), // 날짜 포맷
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+              child: Text(
+                DateFormat(
+                  'yyyy년 MM월 dd일 (E)',
+                  'ko_KR',
+                ).format(_selectedDate), // 날짜 포맷
+                style: AppTypography.caption.sb11.copyWith(
+                  color: AppColors.colorWhite,
+                ),
               ),
             ),
             SizedBox(
