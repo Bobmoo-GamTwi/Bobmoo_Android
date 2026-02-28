@@ -534,27 +534,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             // 케이스별로 다른 Sliver 추가
             // 로딩 중
             if (snapshot.connectionState == ConnectionState.waiting)
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height - kToolbarHeight,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: const Center(child: CircularProgressIndicator()),
               )
             // 에러 발생
             else if (snapshot.hasError)
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height - kToolbarHeight,
-                  child: _buildErrorWidget(snapshot.error!),
-                ),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _buildErrorWidget(snapshot.error!),
               )
             // 데이터 없을 시 비어있음 표시
             else if (!snapshot.hasData || snapshot.data!.isEmpty)
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height - kToolbarHeight,
-                  child: _buildEmptyState(),
-                ),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _buildEmptyState(),
               )
             // 데이터 로딩 성공 -> MealList 위젯 생성
             else
