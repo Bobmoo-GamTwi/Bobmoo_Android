@@ -474,54 +474,65 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final groupedMeals = groupMeals(meals);
     final mealTypes = _orderedMealTypesByDynamicHours(groupedMeals);
 
-    return RefreshIndicator(
-      onRefresh: _refreshMeals, // 당겨서 새로고침 기능 연결
-      child: ListView.builder(
-        itemCount: mealTypes.length,
-        padding: EdgeInsets.symmetric(
-          horizontal: 21.w,
-          vertical: 23.h,
-        ),
-        itemBuilder: (context, index) {
-          final mealType = mealTypes[index];
-          final mealsByCafeteria = groupedMeals[mealType];
-
-          if (mealsByCafeteria == null || mealsByCafeteria.isEmpty) {
-            return const SizedBox.shrink();
-          }
-          return Padding(
-            padding: EdgeInsets.only(bottom: 25.h),
-            child: TimeGroupedCard(
-              title: mealType,
-              mealData: mealsByCafeteria,
-              selectedDate: _selectedDate,
-            ),
-          );
-        },
+    return ListView.builder(
+      itemCount: mealTypes.length,
+      padding: EdgeInsets.symmetric(
+        horizontal: 21.w,
+        vertical: 23.h,
       ),
+      itemBuilder: (context, index) {
+        final mealType = mealTypes[index];
+        final mealsByCafeteria = groupedMeals[mealType];
+
+        if (mealsByCafeteria == null || mealsByCafeteria.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: EdgeInsets.only(bottom: 25.h),
+          child: TimeGroupedCard(
+            title: mealType,
+            mealData: mealsByCafeteria,
+            selectedDate: _selectedDate,
+          ),
+        );
+      },
     );
   }
 
   Widget _buildBody() {
-    return FutureBuilder<List<Meal>>(
-      future: _mealFuture,
-      builder: (context, snapshot) {
-        // 로딩 중
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        // 에러 발생
-        if (snapshot.hasError) {
-          return _buildErrorWidget(snapshot.error!);
-        }
-        // 데이터 없을 시 비어있음 표시
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyState();
-        }
+    return RefreshIndicator(
+      onRefresh: _refreshMeals,
+      child: FutureBuilder<List<Meal>>(
+        future: _mealFuture,
+        builder: (context, snapshot) {
+          Widget child;
 
-        // 데이터 로딩 성공 -> MealList 위젯 생성
-        return _buildMealList(snapshot.data!);
-      },
+          // 로딩 중
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            child = const Center(child: CircularProgressIndicator());
+          }
+          // 에러 발생
+          else if (snapshot.hasError) {
+            child = _buildErrorWidget(snapshot.error!);
+          }
+          // 데이터 없을 시 비어있음 표시
+          else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            child = _buildEmptyState();
+          }
+          // 데이터 로딩 성공 -> MealList 위젯 생성
+          else {
+            child = _buildMealList(snapshot.data!);
+          }
+
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height - kToolbarHeight,
+              child: child,
+            ),
+          );
+        },
+      ),
     );
   }
 
