@@ -20,8 +20,20 @@ class UnivProvider extends ChangeNotifier {
     String? jsonString = prefs.getString('selectedUniv');
 
     if (jsonString != null) {
-      _selectedUniversity = University.fromJson(jsonDecode(jsonString));
-      _lastUnivColor = _selectedUniversity!.hexToColor();
+      try {
+        final json = jsonDecode(jsonString) as Map<String, dynamic>?;
+        if (json != null &&
+            json['schoolId'] != null &&
+            json['schoolName'] != null &&
+            json['schoolNameK'] != null &&
+            json['schoolColor'] != null) {
+          _selectedUniversity = University.fromJson(json);
+          _lastUnivColor = _selectedUniversity!.hexToColor();
+        }
+        // 필수 데이터 없으면 그냥 null 유지 → 학교 선택 화면으로 감
+      } catch (e) {
+        await prefs.remove('selectedUniv'); // 깨진 데이터 삭제
+      }
     }
 
     _isInitialized = true;
@@ -52,5 +64,5 @@ class UnivProvider extends ChangeNotifier {
 
   Color get univColor =>
       university?.hexToColor() ?? _lastUnivColor ?? Colors.blue;
-  String get univName => university?.name ?? "";
+  String get univName => university?.schoolNameK ?? "";
 }
