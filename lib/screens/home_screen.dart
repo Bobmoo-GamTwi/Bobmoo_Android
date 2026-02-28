@@ -19,6 +19,7 @@ import 'package:bobmoo/utils/hours_parser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -403,82 +404,67 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildEmptyState() {
-    final Color univColor = context.watch<UnivProvider>().univColor;
-
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(32.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 아이콘
-            Container(
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: univColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.restaurant_menu,
-                size: 48.w,
-                color: univColor,
-              ),
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.all(24.w),
+      decoration: BoxDecoration(
+        color: AppColors.colorWhite,
+        borderRadius: BorderRadius.circular(15.r),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 아이콘
+          SvgPicture.asset(
+            'assets/icons/icon_bob.svg',
+            width: 60.w,
+          ),
+          SizedBox(height: 24.h),
+          // 제목
+          Text(
+            '등록된 식단이 없어요',
+            style: AppTypography.head.sb18,
+          ),
+          SizedBox(height: 21.h),
+          // 설명
+          Text(
+            '식단 정보가 등록되지 않았어요.',
+            textAlign: TextAlign.center,
+            style: AppTypography.search.sb15.copyWith(
+              color: AppColors.colorGray3,
             ),
-            SizedBox(height: 24.h),
-            // 제목
-            Text(
-              '등록된 식단이 없어요',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
+          ),
+          SizedBox(
+            height: 4.h,
+          ),
+          Text(
+            '잠시 후 다시 확인해주세요.',
+            textAlign: TextAlign.center,
+            style: AppTypography.search.sb15.copyWith(
+              color: AppColors.colorGray3,
             ),
-            SizedBox(height: 8.h),
-            // 설명
-            Text(
-              '아직 오늘의 메뉴가 등록되지 않았습니다.\n잠시 후 다시 확인해주세요.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.greyTextColor,
-                height: 1.5,
+          ),
+          SizedBox(height: 118.h),
+          // 아래로 당겨 새로고침
+          Column(
+            children: [
+              Icon(
+                Icons.arrow_downward,
+                color: AppColors.colorGray3,
+                size: 32.w,
               ),
-            ),
-            SizedBox(height: 24.h),
-            // 새로고침 버튼
-            TextButton(
-              onPressed: () => setState(() {
-                _refreshMeals();
-              }),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: univColor,
-                padding: EdgeInsets.symmetric(
-                  horizontal: 24.w,
-                  vertical: 12.h,
+              SizedBox(
+                height: 7.h,
+              ),
+              Text(
+                "아래로 당겨 새로고침",
+                style: AppTypography.button.sb11.copyWith(
+                  color: AppColors.colorGray3,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24.r),
-                ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.refresh, size: 18.w),
-                  SizedBox(width: 8.w),
-                  Text(
-                    '새로고침',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
