@@ -24,7 +24,7 @@ class TimeGroupedCard extends StatelessWidget {
       shadowColor: Colors.black.withValues(alpha: 0.5),
       elevation: 4,
       child: Padding(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.all(13.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

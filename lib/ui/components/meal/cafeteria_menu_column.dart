@@ -47,7 +47,6 @@ class CafeteriaMenuColumn extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: 3.h),
         // 식당의 메뉴들
         ListView.builder(
           padding: EdgeInsets.zero,
@@ -64,8 +63,6 @@ class CafeteriaMenuColumn extends StatelessWidget {
             );
           },
         ),
-
-        // ...data.meals.map((meal) => MealItemRow(meal: meal)),
       ],
     );
   }
