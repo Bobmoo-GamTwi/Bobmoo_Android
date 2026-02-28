@@ -1,7 +1,7 @@
 import 'package:bobmoo/models/meal_by_cafeteria.dart';
 import 'package:bobmoo/models/menu_model.dart';
-import 'package:bobmoo/widgets/meal_item_row.dart';
-import 'package:bobmoo/widgets/open_status_badge.dart';
+import 'package:bobmoo/ui/components/meal/meal_item_row.dart';
+import 'package:bobmoo/ui/components/meal/open_status_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
