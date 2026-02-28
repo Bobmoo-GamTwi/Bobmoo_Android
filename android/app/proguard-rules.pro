@@ -3,6 +3,7 @@
 -keep class com.hwoo.bobmoo.widget.receiver.MealGlanceWidgetReceiver { *; }
 -keep class com.hwoo.bobmoo.widget.receiver.AllCafeteriasGlanceWidgetReceiver { *; }
 -keep class com.hwoo.bobmoo.widget.WidgetUpdateManager { *; }
+-keep class com.hwoo.bobmoo.widget.RefreshWidgetAction { *; }
 
 # ---- Strip verbose debug logs in release ----
 -assumenosideeffects class android.util.Log {

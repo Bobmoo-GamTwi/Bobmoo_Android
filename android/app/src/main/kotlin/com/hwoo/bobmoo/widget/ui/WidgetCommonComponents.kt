@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
+import androidx.glance.action.actionRunCallback
+import androidx.glance.action.clickable
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
 import androidx.glance.layout.Alignment
@@ -19,6 +21,7 @@ import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import com.hwoo.bobmoo.widget.RefreshWidgetAction
 import com.hwoo.bobmoo.widget.data.MealInfo
 
 /**
@@ -35,6 +38,16 @@ fun WidgetHeader(currentTime: String) {
             style = TextStyle(
                 fontSize = 12.sp,
                 color = androidx.glance.color.ColorProvider(Color.Gray, Color.Gray)
+            )
+        )
+        Spacer(modifier = GlanceModifier.defaultWeight())
+        Text(
+            text = "새로고침",
+            modifier = GlanceModifier.clickable(onClick = actionRunCallback<RefreshWidgetAction>()),
+            style = TextStyle(
+                fontSize = 12.sp,
+                color = androidx.glance.color.ColorProvider(Color(0xFF4D89B2), Color(0xFF4D89B2)),
+                fontWeight = FontWeight.Bold
             )
         )
     }
