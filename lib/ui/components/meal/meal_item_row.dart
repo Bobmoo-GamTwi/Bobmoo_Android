@@ -1,10 +1,12 @@
-import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/menu_model.dart';
+import 'package:bobmoo/ui/theme/app_colors.dart';
+import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class MealItemRow extends StatelessWidget {
   final MealItem meal;
+
   const MealItemRow({super.key, required this.meal});
 
   @override
@@ -17,7 +19,7 @@ class MealItemRow extends StatelessWidget {
           // 1. 코스 (A, B, C...)
           Text(
             "${meal.course} ",
-            style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500),
+            style: AppTypography.caption.m15,
           ),
           // 2. 메뉴 이름
           Expanded(
@@ -32,28 +34,18 @@ class MealItemRow extends StatelessWidget {
                   .map((entry) {
                     return Text(
                       "${entry.value} ",
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w400,
-                      ),
+                      style: AppTypography.caption.r15,
                     );
                   })
                   .toList(),
             ),
           ),
           Padding(
-            padding: EdgeInsets.zero,
+            padding: EdgeInsets.only(top: 3.h),
             child: Text(
               "${meal.price}원",
-              style: TextStyle(
-                fontSize: 11.sp,
-                fontFamily: 'NanumSquareRound',
-                fontWeight: FontWeight.w700,
-                color: AppColors.greyTextColor,
-                // 자간 5%
-                letterSpacing: 11.sp * 0.02,
-                // 행간 21px
-                height: 2.0,
+              style: AppTypography.button.sb11.copyWith(
+                color: AppColors.colorGray3,
               ),
             ),
           ),

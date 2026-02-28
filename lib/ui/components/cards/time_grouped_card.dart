@@ -1,5 +1,6 @@
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/meal_by_cafeteria.dart';
+import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/ui/components/meal/cafeteria_menu_column.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,29 +24,14 @@ class TimeGroupedCard extends StatelessWidget {
       shadowColor: Colors.black.withValues(alpha: 0.5),
       elevation: 4,
       child: Padding(
-        padding: EdgeInsets.all(12.w),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 섹션 제목 (예: "점심")
-            Row(
-              children: [
-                _getIconForMeal(title), // 위에서 만든 함수로 아이콘 가져오기
-                SizedBox(
-                  width: 5.w,
-                ),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 21.sp,
-                    fontWeight: FontWeight.w700,
-                    // 자간 5%
-                    letterSpacing: 21.sp * 0.05,
-                    // 행간 170%
-                    height: 1.7,
-                  ),
-                ),
-              ],
+            Text(
+              title,
+              style: AppTypography.head.b21,
             ),
             // 각 식당별 메뉴 목록
             ListView.separated(
@@ -58,12 +44,7 @@ class TimeGroupedCard extends StatelessWidget {
               itemBuilder: (BuildContext context, int index) {
                 // 각 인덱스에 해당하는 식당 메뉴 위젯을 반환
                 return Padding(
-                  padding: EdgeInsets.only(
-                    left: 13.w,
-                    right: 5.w,
-                    top: 4.h,
-                    bottom: 12.h,
-                  ),
+                  padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 3.w),
                   child: CafeteriaMenuColumn(
                     data: mealData[index],
                     mealType: title,
@@ -73,10 +54,11 @@ class TimeGroupedCard extends StatelessWidget {
               },
               separatorBuilder: (BuildContext context, int index) {
                 // 각 아이템 사이에 들어갈 구분선 위젯을 반환
+                // thickness를 정수로 고정해야 소수 픽셀으로 인한 렌더링 불일치 방지
                 return Divider(
-                  height: 10.h,
-                  thickness: 1.5,
-                  color: AppColors.grayDividerColor,
+                  height: 1,
+                  thickness: 2,
+                  color: AppColors.colorGray5,
                 );
               },
             ),
@@ -88,6 +70,7 @@ class TimeGroupedCard extends StatelessWidget {
 }
 
 // 아이콘을 결정하는 함수
+// ignore: unused_element
 Widget _getIconForMeal(String title) {
   // => 를 사용해 바로 위젯을 반환합니다.
   final icon = switch (title) {
