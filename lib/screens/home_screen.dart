@@ -16,6 +16,7 @@ import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/utils/meal_utils.dart';
 import 'package:bobmoo/ui/components/cards/time_grouped_card.dart';
 import 'package:bobmoo/utils/hours_parser.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -474,65 +475,93 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final groupedMeals = groupMeals(meals);
     final mealTypes = _orderedMealTypesByDynamicHours(groupedMeals);
 
-    return ListView.builder(
-      itemCount: mealTypes.length,
+    return SliverPadding(
       padding: EdgeInsets.symmetric(
         horizontal: 21.w,
         vertical: 23.h,
       ),
-      itemBuilder: (context, index) {
-        final mealType = mealTypes[index];
-        final mealsByCafeteria = groupedMeals[mealType];
+      sliver: SliverList.builder(
+        itemCount: mealTypes.length,
 
-        if (mealsByCafeteria == null || mealsByCafeteria.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        return Padding(
-          padding: EdgeInsets.only(bottom: 25.h),
-          child: TimeGroupedCard(
-            title: mealType,
-            mealData: mealsByCafeteria,
-            selectedDate: _selectedDate,
-          ),
-        );
-      },
-    );
-  }
+        itemBuilder: (context, index) {
+          final mealType = mealTypes[index];
+          final mealsByCafeteria = groupedMeals[mealType];
 
-  Widget _buildBody() {
-    return RefreshIndicator(
-      onRefresh: _refreshMeals,
-      child: FutureBuilder<List<Meal>>(
-        future: _mealFuture,
-        builder: (context, snapshot) {
-          Widget child;
-
-          // 로딩 중
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            child = const Center(child: CircularProgressIndicator());
+          if (mealsByCafeteria == null || mealsByCafeteria.isEmpty) {
+            return const SizedBox.shrink();
           }
-          // 에러 발생
-          else if (snapshot.hasError) {
-            child = _buildErrorWidget(snapshot.error!);
-          }
-          // 데이터 없을 시 비어있음 표시
-          else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            child = _buildEmptyState();
-          }
-          // 데이터 로딩 성공 -> MealList 위젯 생성
-          else {
-            child = _buildMealList(snapshot.data!);
-          }
-
-          return SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height - kToolbarHeight,
-              child: child,
+          return Padding(
+            padding: EdgeInsets.only(bottom: 25.h),
+            child: TimeGroupedCard(
+              title: mealType,
+              mealData: mealsByCafeteria,
+              selectedDate: _selectedDate,
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildBody() {
+    return FutureBuilder<List<Meal>>(
+      future: _mealFuture,
+      builder: (context, snapshot) {
+        return CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          slivers: [
+            CupertinoSliverRefreshControl(
+              onRefresh: _refreshMeals,
+              builder:
+                  (
+                    context,
+                    refreshState,
+                    pulledExtent,
+                    refreshTriggerPullDistance,
+                    refreshIndicatorExtent,
+                  ) {
+                    return Container(
+                      margin: const EdgeInsets.all(20),
+                      padding: EdgeInsets.all(33.h),
+                      child: CupertinoActivityIndicator(
+                        radius: 10.r,
+                      ),
+                    );
+                  },
+            ),
+            // 케이스별로 다른 Sliver 추가
+            // 로딩 중
+            if (snapshot.connectionState == ConnectionState.waiting)
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height - kToolbarHeight,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+              )
+            // 에러 발생
+            else if (snapshot.hasError)
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height - kToolbarHeight,
+                  child: _buildErrorWidget(snapshot.error!),
+                ),
+              )
+            // 데이터 없을 시 비어있음 표시
+            else if (!snapshot.hasData || snapshot.data!.isEmpty)
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height - kToolbarHeight,
+                  child: _buildEmptyState(),
+                ),
+              )
+            // 데이터 로딩 성공 -> MealList 위젯 생성
+            else
+              _buildMealList(snapshot.data!), // Sliver 직접 추가
+          ],
+        );
+      },
     );
   }
 
