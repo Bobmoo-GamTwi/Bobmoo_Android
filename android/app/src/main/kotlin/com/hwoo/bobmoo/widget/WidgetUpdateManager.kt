@@ -1,4 +1,4 @@
-package com.hwoo.bobmoo
+package com.hwoo.bobmoo.widget
 
 import android.app.AlarmManager
 import android.app.PendingIntent

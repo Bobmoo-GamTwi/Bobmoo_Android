@@ -1,10 +1,13 @@
-package com.hwoo.bobmoo
+package com.hwoo.bobmoo.widget
 
 import android.content.Context
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
+import com.hwoo.bobmoo.widget.data.AllCafeteriasDataParser
+import com.hwoo.bobmoo.widget.data.MealWidgetDataParser
+import com.hwoo.bobmoo.widget.ui.MealWidgetContent
 import es.antonborri.home_widget.HomeWidgetPlugin
 import java.util.Calendar
 

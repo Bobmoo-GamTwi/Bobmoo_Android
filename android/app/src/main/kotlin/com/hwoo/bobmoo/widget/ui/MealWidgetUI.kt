@@ -1,4 +1,4 @@
-package com.hwoo.bobmoo
+package com.hwoo.bobmoo.widget.ui
 
 import android.content.Context
 import androidx.compose.runtime.Composable
@@ -10,6 +10,8 @@ import androidx.glance.background
 import androidx.glance.layout.Column
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
+import com.hwoo.bobmoo.MainActivity
+import com.hwoo.bobmoo.widget.data.MealInfo
 import es.antonborri.home_widget.actionStartActivity
 import java.text.SimpleDateFormat
 import java.util.Date

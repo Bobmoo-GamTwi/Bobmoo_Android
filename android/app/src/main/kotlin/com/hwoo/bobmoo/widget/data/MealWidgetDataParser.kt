@@ -1,4 +1,4 @@
-package com.hwoo.bobmoo
+package com.hwoo.bobmoo.widget.data
 
 import org.json.JSONArray
 import org.json.JSONObject

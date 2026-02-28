@@ -36,7 +36,7 @@
             android:value="2" />
 
         <receiver
-            android:name=".MealGlanceWidgetReceiver"
+            android:name=".widget.receiver.MealGlanceWidgetReceiver"
             android:exported="true"
             android:label="하나의 식당 위젯">
             <intent-filter>
@@ -48,7 +48,7 @@
         </receiver>
 
         <receiver
-            android:name=".AllCafeteriasGlanceWidgetReceiver"
+            android:name=".widget.receiver.AllCafeteriasGlanceWidgetReceiver"
             android:exported="true"
             android:label="모든 식당 위젯">
             <intent-filter>
@@ -61,7 +61,7 @@
         </receiver>
 
         <receiver
-            android:name=".WidgetUpdateManager"
+            android:name=".widget.WidgetUpdateManager"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.hwoo.bobmoo.action.WIDGET_UPDATE" />
@@ -69,7 +69,7 @@
         </receiver>
 
         <receiver
-            android:name=".BootReceiver"
+            android:name=".widget.receiver.BootReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

@@ -1,4 +1,4 @@
-package com.hwoo.bobmoo
+package com.hwoo.bobmoo.widget.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -19,6 +19,7 @@ import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import com.hwoo.bobmoo.widget.data.MealInfo
 
 /**
  * 최상단 헤더

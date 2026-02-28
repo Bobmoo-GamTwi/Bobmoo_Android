@@ -1,8 +1,8 @@
 # ---- Keep Android entry points used by OS / widgets ----
--keep class com.hwoo.bobmoo.BootReceiver { *; }
--keep class com.hwoo.bobmoo.MealGlanceWidgetReceiver { *; }
--keep class com.hwoo.bobmoo.AllCafeteriasGlanceWidgetReceiver { *; }
--keep class com.hwoo.bobmoo.WidgetUpdateManager { *; }
+-keep class com.hwoo.bobmoo.widget.receiver.BootReceiver { *; }
+-keep class com.hwoo.bobmoo.widget.receiver.MealGlanceWidgetReceiver { *; }
+-keep class com.hwoo.bobmoo.widget.receiver.AllCafeteriasGlanceWidgetReceiver { *; }
+-keep class com.hwoo.bobmoo.widget.WidgetUpdateManager { *; }
 
 # ---- Strip verbose debug logs in release ----
 -assumenosideeffects class android.util.Log {

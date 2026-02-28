@@ -1,10 +1,11 @@
-package com.hwoo.bobmoo
+package com.hwoo.bobmoo.widget.receiver
 
+import android.appwidget.AppWidgetManager
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
+import com.hwoo.bobmoo.widget.WidgetUpdateManager
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -29,6 +30,6 @@ class BootReceiver : BroadcastReceiver() {
             ComponentName(context, AllCafeteriasGlanceWidgetReceiver::class.java)
 
         return appWidgetManager.getAppWidgetIds(mealWidget).isNotEmpty() ||
-                appWidgetManager.getAppWidgetIds(allCafeteriasWidget).isNotEmpty()
+            appWidgetManager.getAppWidgetIds(allCafeteriasWidget).isNotEmpty()
     }
 }

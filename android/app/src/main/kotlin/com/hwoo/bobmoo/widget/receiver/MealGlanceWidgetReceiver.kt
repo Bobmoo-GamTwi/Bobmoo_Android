@@ -1,10 +1,12 @@
-package com.hwoo.bobmoo
+package com.hwoo.bobmoo.widget.receiver
 
 import android.content.Context
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import com.hwoo.bobmoo.widget.MealGlanceWidget
+import com.hwoo.bobmoo.widget.WidgetUpdateManager
 
-class AllCafeteriasGlanceWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget = AllCafeteriasGlanceWidget()
+class MealGlanceWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget = MealGlanceWidget()
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
@@ -21,12 +23,12 @@ class AllCafeteriasGlanceWidgetReceiver : GlanceAppWidgetReceiver() {
     }
 
     private fun hasAnyWidgetEnabled(context: Context): Boolean {
-        // MealGlanceWidget이 아직 활성화되어 있는지 확인
+        // AllCafeteriasGlanceWidget이 아직 활성화되어 있는지 확인
         val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(context)
-        val mealComponent = android.content.ComponentName(
+        val allCafeteriasComponent = android.content.ComponentName(
             context,
-            MealGlanceWidgetReceiver::class.java
+            AllCafeteriasGlanceWidgetReceiver::class.java
         )
-        return appWidgetManager.getAppWidgetIds(mealComponent).isNotEmpty()
+        return appWidgetManager.getAppWidgetIds(allCafeteriasComponent).isNotEmpty()
     }
 }
