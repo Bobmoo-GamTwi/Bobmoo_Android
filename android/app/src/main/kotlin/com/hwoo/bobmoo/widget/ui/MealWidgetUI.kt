@@ -8,20 +8,16 @@ import androidx.glance.GlanceModifier
 import androidx.glance.action.clickable
 import androidx.glance.background
 import androidx.glance.layout.Column
+import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import com.hwoo.bobmoo.MainActivity
 import com.hwoo.bobmoo.widget.data.MealInfo
 import es.antonborri.home_widget.actionStartActivity
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun MealWidgetContent(context: Context, mealInfo: MealInfo) {
-    val sdf = SimpleDateFormat("M월 d일 EEEE HH:mm", Locale.KOREAN)
-    val currentTimeString = sdf.format(Date())
-
     Column(
         modifier = GlanceModifier
             .fillMaxSize()

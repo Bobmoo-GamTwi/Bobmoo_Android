@@ -21,16 +21,9 @@ import androidx.glance.layout.width
 import com.hwoo.bobmoo.MainActivity
 import com.hwoo.bobmoo.widget.data.MealInfo
 import es.antonborri.home_widget.actionStartActivity
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun AllCafeteriasWidgetContent(context: Context, mealInfos: List<MealInfo>) {
-    val sdf = SimpleDateFormat("M월 d일 EEEE HH:mm", Locale.KOREAN)
-    val currentTimeString = sdf.format(Date())
-
-    // "운영중"인 식당이 하나라도 있는지 확인하여 전체 상태를 결정
     val globalStatus =
         mealInfos.find { it.status == "운영중" }?.status ?: mealInfos.firstOrNull()?.status ?: ""
     val periodLabel = mealInfos.firstOrNull()?.periodLabel ?: "정보 없음"
@@ -42,25 +35,42 @@ fun AllCafeteriasWidgetContent(context: Context, mealInfos: List<MealInfo>) {
             .padding(16.dp)
             .clickable(onClick = actionStartActivity<MainActivity>(context)),
     ) {
-        WidgetHeader(currentTime = currentTimeString)
-        MealPeriodHeader(globalStatus = globalStatus, periodLabel = periodLabel)
+        if (mealInfos.isEmpty() || mealInfos.all { it.isEmptyDraftState() }) {
+            WidgetEmptyState()
+        } else {
+            WidgetDateText(
+                dateLabel = mealInfos.firstOrNull()?.dateLabel ?: "",
+                dateToken = "widget.sb12"
+            )
+            Spacer(modifier = GlanceModifier.height(6.dp))
+            WidgetPeriodStatusRow(
+                globalStatus = globalStatus,
+                periodLabel = periodLabel,
+                periodToken = "head.b21"
+            )
+            Spacer(modifier = GlanceModifier.height(10.dp))
 
-        Row(
-            modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
-            verticalAlignment = Alignment.Vertical.Top
-        ) {
-            // 각 식당 정보에 대해 루프를 돕니다.
-            mealInfos.forEachIndexed { index, mealInfo ->
-                Box(
-                    modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
-                    contentAlignment = Alignment.TopStart
-                ) {
-                    CafeteriaColumn(mealInfo = mealInfo)
-                }
+            Row(
+                modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
+                verticalAlignment = Alignment.Vertical.Top
+            ) {
+                mealInfos.forEachIndexed { index, mealInfo ->
+                    Box(
+                        modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
+                        contentAlignment = Alignment.TopStart
+                    ) {
+                        CafeteriaColumn(
+                            mealInfo = mealInfo,
+                            maxMenuLines = 1,
+                            cafeteriaNameToken = "widget.sb14",
+                            hourToken = "widget.m11",
+                            menuToken = "widget.sb12"
+                        )
+                    }
 
-                if (index < mealInfos.size - 1) {
-                    // 컨텐츠 뒤에 항상 세로선을 추가합니다.
-                    VerticalSeparator()
+                    if (index < mealInfos.size - 1) {
+                        VerticalSeparator()
+                    }
                 }
             }
         }
@@ -72,10 +82,10 @@ fun AllCafeteriasWidgetContent(context: Context, mealInfos: List<MealInfo>) {
  */
 @Composable
 private fun VerticalSeparator() {
-    Spacer(modifier = GlanceModifier.width(8.dp))
+    Spacer(modifier = GlanceModifier.width(10.dp))
     Spacer(
-        modifier = GlanceModifier.width(1.dp).height(100.dp)
+        modifier = GlanceModifier.width(1.dp).height(88.dp)
             .background(Color(0xFFE0E0E0))
     )
-    Spacer(modifier = GlanceModifier.width(8.dp))
+    Spacer(modifier = GlanceModifier.width(10.dp))
 }

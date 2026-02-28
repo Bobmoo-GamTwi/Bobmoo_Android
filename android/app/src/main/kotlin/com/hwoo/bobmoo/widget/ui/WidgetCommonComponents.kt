@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceModifier
-import androidx.glance.action.clickable
-import androidx.glance.appwidget.action.actionRunCallback
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
 import androidx.glance.color.ColorProvider
@@ -15,11 +15,13 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxHeight
+import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.width
 import androidx.glance.text.Text
-import com.hwoo.bobmoo.widget.RefreshWidgetAction
+import com.hwoo.bobmoo.R
 import com.hwoo.bobmoo.widget.data.MealInfo
 import com.hwoo.bobmoo.widget.theme.TypographyTokens
 
@@ -148,5 +150,47 @@ fun CafeteriaColumn(
                 maxLines = calculatedMaxLines
             )
         }
+    }
+}
+
+fun MealInfo.isEmptyDraftState(): Boolean {
+    if (isEmptyState) return true
+    if (cafeteriaName.isBlank()) return true
+    return courses.isEmpty()
+}
+
+@Composable
+fun WidgetEmptyState() {
+    Column(
+        modifier = GlanceModifier.fillMaxSize().padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.Vertical.CenterVertically,
+        horizontalAlignment = Alignment.Horizontal.CenterHorizontally
+    ) {
+        Image(
+            provider = ImageProvider(R.drawable.ic_widget_bob),
+            contentDescription = "빈 상태 아이콘",
+            modifier = GlanceModifier.width(57.dp).height(57.dp)
+        )
+        Spacer(modifier = GlanceModifier.height(12.dp))
+        Text(
+            text = "등록된 식단이 없어요",
+            style = TypographyTokens.textStyle(key = "head.sb18")
+        )
+        Spacer(modifier = GlanceModifier.height(10.dp))
+        Text(
+            text = "식단 정보가 등록되지 않았어요.",
+            style = TypographyTokens.textStyle(
+                key = "widget.m11",
+                color = ColorProvider(Color.Gray, Color.Gray)
+            )
+        )
+        Spacer(modifier = GlanceModifier.height(4.dp))
+        Text(
+            text = "잠시 후 다시 확인해주세요.",
+            style = TypographyTokens.textStyle(
+                key = "widget.m11",
+                color = ColorProvider(Color.Gray, Color.Gray)
+            )
+        )
     }
 }
