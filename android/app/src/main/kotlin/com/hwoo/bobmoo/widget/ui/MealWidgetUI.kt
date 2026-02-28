@@ -22,16 +22,33 @@ fun MealWidgetContent(context: Context, mealInfo: MealInfo) {
         modifier = GlanceModifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(16.dp) // 동일한 전체 패딩 적용
+            .padding(16.dp)
             .clickable(onClick = actionStartActivity<MainActivity>(context)),
     ) {
-        // 1. 공통 헤더 재사용
-        WidgetHeader(currentTime = currentTimeString)
-
-        // 2. 공통 시간대 헤더 재사용
-        MealPeriodHeader(globalStatus = mealInfo.status, periodLabel = mealInfo.periodLabel)
-
-        // 3. 공통 식당 정보 칼럼 재사용
-        CafeteriaColumn(mealInfo = mealInfo)
+        if (mealInfo.isEmptyDraftState()) {
+            WidgetEmptyState()
+        } else {
+            WidgetDateText(
+                dateLabel = mealInfo.dateLabel,
+                dateToken = "widget.sb12"
+            )
+            Spacer(modifier = GlanceModifier.height(6.dp))
+            WidgetPeriodStatusRow(
+                globalStatus = mealInfo.status,
+                periodLabel = mealInfo.periodLabel,
+                periodToken = "head.b30"
+            )
+            Spacer(modifier = GlanceModifier.height(2.dp))
+            WidgetHoursText(hoursLabel = mealInfo.hoursLabel, hourToken = "widget.sb12")
+            Spacer(modifier = GlanceModifier.height(10.dp))
+            CafeteriaColumn(
+                mealInfo = mealInfo,
+                maxMenuLines = 2,
+                cafeteriaNameToken = "widget.sb14",
+                hourToken = "widget.sb12",
+                menuToken = "widget.sb12",
+                showHours = false
+            )
+        }
     }
 }

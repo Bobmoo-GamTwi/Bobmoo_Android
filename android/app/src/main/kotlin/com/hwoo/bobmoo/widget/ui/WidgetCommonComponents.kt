@@ -25,83 +25,130 @@ import com.hwoo.bobmoo.R
 import com.hwoo.bobmoo.widget.data.MealInfo
 import com.hwoo.bobmoo.widget.theme.TypographyTokens
 
-/**
- * 최상단 헤더
- **/
+private data class StatusColors(val background: Color, val text: Color)
+
+/** 날짜 표시용 텍스트 */
 @Composable
-fun WidgetHeader(currentTime: String) {
-    Row(
-        modifier = GlanceModifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Vertical.CenterVertically
+fun WidgetDateText(
+    dateLabel: String,
+    dateToken: String = "widget.sb7"
+) {
+    if (dateLabel.isBlank()) return
+    Text(
+        text = dateLabel,
+        style = TypographyTokens.textStyle(
+            key = dateToken,
+            color = ColorProvider(Color(0xFF61656F), Color(0xFF61656F))
+        ),
+        maxLines = 1
+    )
+}
+
+/** 시간대 라벨 표시용 텍스트 */
+@Composable
+fun WidgetPeriodText(
+    periodLabel: String,
+    periodToken: String = "widget.sb14"
+) {
+    Text(
+        text = periodLabel,
+        style = TypographyTokens.textStyle(key = periodToken),
+        maxLines = 1
+    )
+}
+
+/** 식당이름 표시용 텍스트 */
+@Composable
+fun cafeteriaNameText(
+    cafeteriaName: String,
+    periodToken: String = "widget.sb12"
+) {
+    Text(
+        text = cafeteriaName,
+        style = TypographyTokens.textStyle(key = periodToken),
+        maxLines = 1
+    )
+}
+
+/** 식당 시간 표시용 텍스트 */
+@Composable
+fun WidgetHoursText(
+    hoursLabel: String,
+    hourToken: String = "widget.sb7"
+) {
+    if (hoursLabel.isBlank()) return
+    Text(
+        text = "($hoursLabel)",
+        style = TypographyTokens.textStyle(
+            key = hourToken,
+            color = ColorProvider(Color(0xFF61656F), Color(0xFF61656F))
+        ),
+        maxLines = 1
+    )
+}
+
+/** 상태에 따른 운영배지 색상 반환하는 함수 */
+private fun statusColors(globalStatus: String): StatusColors? {
+    return when (globalStatus) {
+        "운영전" -> StatusColors(background = Color(0xFF61656F), text = Color.White)
+        "운영중" -> StatusColors(background = Color(0xFF0064FB), text = Color.White)
+        "운영종료" -> StatusColors(background = Color(0xFFFF2200), text = Color.White)
+        else -> null
+    }
+}
+
+/** 운영배지 */
+@Composable
+fun WidgetStatusBadge(globalStatus: String) {
+    val statusColors = statusColors(globalStatus) ?: return
+    Box(
+        modifier = GlanceModifier
+            .background(statusColors.background)
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .cornerRadius(12.dp),
+        contentAlignment = Alignment.Center
     ) {
         Text(
-            text = currentTime,
-            style = TypographyTokens.textStyle(
-                key = "widget.m11",
-                color = ColorProvider(Color.Gray, Color.Gray)
-            )
-        )
-        Spacer(modifier = GlanceModifier.defaultWeight())
-        Text(
-            text = "새로고침",
-            modifier = GlanceModifier.clickable(onClick = actionRunCallback<RefreshWidgetAction>()),
+            text = globalStatus,
             style = TypographyTokens.textStyle(
                 key = "button.sb12",
-                color = ColorProvider(Color(0xFF4D89B2), Color(0xFF4D89B2))
+                color = ColorProvider(statusColors.text, statusColors.text)
             )
         )
     }
 }
 
-/**
- * "아침", "점심" 등 시간대 헤더
- **/
 @Composable
-fun MealPeriodHeader(periodLabel: String, globalStatus: String) {
-    // 상태별 색상을 정의하는 데이터 클래스
-    data class StatusColors(val background: Color, val text: Color)
-
-    // when을 사용하여 상태별 색상을 결정합니다.
-    val statusColors = when (globalStatus) {
-        "운영중" -> StatusColors(background = Color(0xFF4D89B2), text = Color.White) // 파란 계열
-        "운영전" -> StatusColors(background = Color(0xFF4D89B2), text = Color.White) // 회색 계열
-        "운영종료" -> StatusColors(background = Color(0xFFC95353), text = Color.White) // 빨간 계열
-        else -> null // 상태 텍스트가 없으면 null 반환
-    }
-
-    // Row를 사용하여 시간대와 상태 배지를 가로로 배치합니다.
+fun WidgetPeriodStatusRow(
+    periodLabel: String,
+    globalStatus: String,
+    periodToken: String = "head.b21",
+    topPadding: Int = 0
+) {
     Row(
-        modifier = GlanceModifier.fillMaxWidth().padding(top = 8.dp),
+        modifier = GlanceModifier.fillMaxWidth().padding(top = topPadding.dp),
         verticalAlignment = Alignment.Vertical.CenterVertically
     ) {
-        // "아침", "점심" 등 시간대 텍스트
-        Text(
-            text = periodLabel,
-            style = TypographyTokens.textStyle(key = "head.b21")
-        )
+        WidgetPeriodText(periodLabel = periodLabel, periodToken = periodToken)
         Spacer(modifier = GlanceModifier.defaultWeight())
-
-        // 상태 배지 (Chip UI)
-        // statusColors가 null이 아닐 때만 (상태 텍스트가 있을 때만) 배지를 표시합니다.
-        if (statusColors != null) {
-            Box(
-                modifier = GlanceModifier
-                    .background(statusColors.background)
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                    .cornerRadius(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = globalStatus,
-                    style = TypographyTokens.textStyle(
-                        key = "button.sb11",
-                        color = ColorProvider(statusColors.text, statusColors.text)
-                    )
-                )
-            }
-        }
+        WidgetStatusBadge(globalStatus = globalStatus)
     }
-    Spacer(modifier = GlanceModifier.height(12.dp))
+}
+
+@Composable
+fun MealPeriodHeader(
+    periodLabel: String,
+    globalStatus: String,
+    periodToken: String = "head.b21",
+    topPadding: Int = 0
+) {
+    WidgetPeriodStatusRow(
+        periodLabel = periodLabel,
+        globalStatus = globalStatus,
+        periodToken = periodToken,
+        topPadding = topPadding
+    )
+    Spacer(modifier = GlanceModifier.height(10.dp))
 }
 
 
@@ -113,13 +160,16 @@ fun MealPeriodHeader(periodLabel: String, globalStatus: String) {
 @Composable
 fun CafeteriaColumn(
     mealInfo: MealInfo,
-    maxMenuLines: Int? = null
+    maxMenuLines: Int? = null,
+    cafeteriaNameToken: String = "search.b17",
+    hourToken: String = "widget.m11",
+    menuToken: String = "widget.sb12",
+    showHours: Boolean = true
 ) {
-    // 자동 계산 로직: 코스 개수에 따라 유연하게
     val calculatedMaxLines = maxMenuLines ?: when {
-        mealInfo.courses.size <= 1 -> 3  // 1개: 3줄 (여유롭게)
-        mealInfo.courses.size == 2 -> 2  // 2개: 2줄
-        else -> 1                        // 3개+: 1줄 (컴팩트)
+        mealInfo.courses.size <= 1 -> 3
+        mealInfo.courses.size == 2 -> 2
+        else -> 1
     }
 
     Column(
@@ -128,25 +178,21 @@ fun CafeteriaColumn(
     ) {
         Text(
             text = mealInfo.cafeteriaName,
-            style = TypographyTokens.textStyle(key = "widget.sb14"),
+            style = TypographyTokens.textStyle(key = cafeteriaNameToken),
             maxLines = 1
         )
-        Spacer(modifier = GlanceModifier.height(2.dp))
-        Text(
-            text = "(${mealInfo.hoursLabel})",
-            style = TypographyTokens.textStyle(
-                key = "widget.sb12",
-                color = ColorProvider(Color.Gray, Color.Gray)
-            ),
-            maxLines = 1
-        )
-        Spacer(modifier = GlanceModifier.height(4.dp))
-        // 메뉴 리스트
+        if (showHours) {
+            Spacer(modifier = GlanceModifier.height(2.dp))
+            WidgetHoursText(hoursLabel = mealInfo.hoursLabel, hourToken = hourToken)
+            Spacer(modifier = GlanceModifier.height(6.dp))
+        } else {
+            Spacer(modifier = GlanceModifier.height(6.dp))
+        }
         mealInfo.courses.forEach { line ->
             Text(
                 text = line,
-                style = TypographyTokens.textStyle(key = "widget.sb12"),
-                modifier = GlanceModifier.padding(top = 2.dp),
+                style = TypographyTokens.textStyle(key = menuToken),
+                modifier = GlanceModifier.padding(top = 3.dp),
                 maxLines = calculatedMaxLines
             )
         }
