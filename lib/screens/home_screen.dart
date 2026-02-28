@@ -10,7 +10,6 @@ import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/repositories/meal_repository.dart';
 import 'package:bobmoo/models/meal_widget_data.dart';
 import 'package:bobmoo/screens/settings_screen.dart';
-import 'package:bobmoo/services/permission_service.dart';
 import 'package:bobmoo/services/widget_service.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/utils/meal_utils.dart';
@@ -24,7 +23,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,10 +37,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   /// 선택한 날짜 저장할 상태 변수
   DateTime _selectedDate = DateTime.now();
-  // 배너 표시 여부를 제어할 상태 변수
-  bool _showPermissionBanner = false;
-  // 사용자가 배너를 닫았는지 여부를 저장할 변수
-  bool _bannerDismissed = false;
 
   /// 화면이 처음 나타날 때 데이터 불러오기
   @override
@@ -57,9 +51,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     // 앱 시작 시에도 위젯 업데이트
     _updateWidgetOnly();
-
-    // 앱 시작 시 권한 확인
-    _checkPermissionAndShowBanner();
   }
 
   /// 위젯이 영구적으로 제거될때 호출
@@ -78,34 +69,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // 앱이 포그라운드로 돌아올 때마다 위젯 업데이트
     if (state == AppLifecycleState.resumed) {
       _updateWidgetOnly();
-
-      // 앱이 다시 활성화될 때마다 권한 확인
-      _checkPermissionAndShowBanner();
     }
-  }
-
-  /// 권한을 확인하고 배너 표시 여부를 결정하는 함수
-  Future<void> _checkPermissionAndShowBanner() async {
-    // SharedPreferences에서 '닫음' 상태를 먼저 읽어옴
-    final prefs = await SharedPreferences.getInstance();
-    _bannerDismissed = prefs.getBool('permissionBannerDismissed') ?? false;
-
-    final hasPermission = await PermissionService.canScheduleExactAlarms();
-    if (mounted) {
-      // 위젯이 화면에 있을 때만 setState 호출
-      setState(() {
-        _showPermissionBanner = !hasPermission && !_bannerDismissed;
-      });
-    }
-  }
-
-  // 배너 닫기 버튼을 눌렀을 때 실행될 함수
-  Future<void> _dismissPermissionBanner() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('permissionBannerDismissed', true);
-    setState(() {
-      _showPermissionBanner = false;
-    });
   }
 
   /// 인앱 업데이트를 확인하고, 가능하면 유연한 업데이트를 시작하는 함수
@@ -669,119 +633,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildPermissionBanner() {
-    final Color univColor = context.watch<UnivProvider>().univColor;
-
-    return SafeArea(
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        margin: EdgeInsets.symmetric(
-          horizontal: 20.w,
-          vertical: 12.h,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // 아이콘
-            Container(
-              padding: EdgeInsets.all(10.w),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Icon(
-                Icons.notifications_active,
-                color: Colors.orange,
-                size: 24.w,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            // 텍스트
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '위젯 권한 필요',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    '실시간 업데이트를 위해 권한을 허용해주세요',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      color: AppColors.greyTextColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: 8.w),
-            // 설정 버튼
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: univColor,
-                padding: EdgeInsets.symmetric(
-                  horizontal: 14.w,
-                  vertical: 8.h,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () async {
-                await PermissionService.openAlarmPermissionSettings();
-              },
-              child: Text(
-                '설정',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            SizedBox(width: 8.w),
-            // 닫기 버튼
-            GestureDetector(
-              onTap: _dismissPermissionBanner,
-              child: Icon(
-                Icons.close,
-                color: AppColors.greyTextColor,
-                size: 20.w,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
       body: _buildBody(),
-      bottomNavigationBar: _showPermissionBanner
-          ? _buildPermissionBanner()
-          : null,
     );
   }
 }
