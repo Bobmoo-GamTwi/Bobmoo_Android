@@ -2,7 +2,9 @@ package com.hwoo.bobmoo.widget.data
 
 import org.json.JSONArray
 import org.json.JSONObject
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 // 위젯에 표시될 정보를 담는 데이터 클래스
 data class MealInfo(
@@ -39,7 +41,7 @@ object MealWidgetDataParser {
 
         try {
             val root = JSONObject(data)
-            val dateLabel = root.optString("date", "")
+            val dateLabel = formatDateLabel(root.optString("date", ""))
             val cafeteriaName = root.optString("cafeteriaName", "식당 정보 없음")
 
             val hours = root.optJSONObject("hours")
@@ -194,5 +196,17 @@ object MealWidgetDataParser {
             }
         }
         return courses
+    }
+
+    private fun formatDateLabel(rawDate: String): String {
+        if (rawDate.isBlank()) return ""
+        return try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.KOREA)
+            val outputFormat = SimpleDateFormat("MM월 dd일 EEEE", Locale.KOREA)
+            val parsed = inputFormat.parse(rawDate) ?: return rawDate
+            outputFormat.format(parsed)
+        } catch (_: Exception) {
+            rawDate
+        }
     }
 }
