@@ -12,7 +12,10 @@ class MenuService {
     String formattedDate =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-    final response = await http.get(Uri.parse('$_baseUrl?date=$formattedDate'));
+    // TODO: 나중에 학교 선택에 따라 달라지게 처리 (임시로 인하대학교로 고정)
+    final response = await http.get(
+      Uri.parse('$_baseUrl?date=$formattedDate&school=인하대학교'),
+    );
 
     if (response.statusCode == 200) {
       // 성공하면, JSON 문자열을 Map<String, dynamic>으로 디코딩
