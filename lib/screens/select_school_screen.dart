@@ -113,7 +113,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
                         : null,
                     iconColor: AppColors.colorGray3,
                     title: Text(
-                      university.name,
+                      university.schoolNameK,
                       style: AppTypography.search.b17,
                     ),
                     onTap: () {
