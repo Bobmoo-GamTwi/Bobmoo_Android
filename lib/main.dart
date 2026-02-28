@@ -11,6 +11,7 @@ import 'package:bobmoo/screens/select_school_screen.dart';
 import 'package:bobmoo/screens/settings_screen.dart';
 import 'package:bobmoo/services/background_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -73,7 +74,20 @@ class BobMooApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           initialRoute: "/",
           onGenerateRoute: (settings) {
-            switch (settings.name) {
+            final rawRouteName = settings.name;
+            final normalizedRouteName =
+                (rawRouteName == null ||
+                    rawRouteName.isEmpty ||
+                    rawRouteName.startsWith('/CALLBACK'))
+                ? "/"
+                : rawRouteName;
+
+            if (kDebugMode) {
+              debugPrint(
+                '[Router] onGenerateRoute raw=$rawRouteName, normalized=$normalizedRouteName, arguments=${settings.arguments}',
+              );
+            }
+            switch (normalizedRouteName) {
               // 앱 시작점
               case "/":
                 return MaterialPageRoute(
@@ -113,6 +127,11 @@ class BobMooApp extends StatelessWidget {
 
               // 잘못된 라우트 이름
               default:
+                if (kDebugMode) {
+                  debugPrint(
+                    '[Router] Unknown route requested: $normalizedRouteName (raw: $rawRouteName)',
+                  );
+                }
                 return MaterialPageRoute(
                   settings: settings,
                   builder: (_) => const Scaffold(
