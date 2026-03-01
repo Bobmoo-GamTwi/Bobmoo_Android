@@ -94,6 +94,6 @@ flutter_launcher_icons:
 flutter_native_splash:
   color: "#FFFFFF"
   android: true
-  ios: true
+  ios: false
   android_12:
     color: "#FFFFFF"
