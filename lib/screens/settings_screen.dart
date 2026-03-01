@@ -2,6 +2,7 @@ import 'package:bobmoo/ui/components/cards/setting_section_card.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
+import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/services/widget_service.dart';
 import 'package:flutter/material.dart';
@@ -77,6 +78,11 @@ class _SettingsScreenState extends State<SettingsScreen>
   Future<void> _saveSelectedCafeteria(
     String cafeteriaName,
   ) async {
+    final previousCafeteria = _selectedCafeteria;
+    if (previousCafeteria == cafeteriaName) {
+      return;
+    }
+
     // SharedPreferences 대신 HomeWidget을 사용하여 데이터를 저장합니다.
     await HomeWidget.saveWidgetData<String>(
       'selectedCafeteriaName',
@@ -92,6 +98,13 @@ class _SettingsScreenState extends State<SettingsScreen>
 
     // async 함수에서 context를 사용할 때는 항상 mounted 여부를 확인하는 것이 안전합니다.
     if (!mounted) return;
+
+    final schoolId = context.read<UnivProvider>().selectedUniversity?.schoolId;
+    AnalyticsService.instance.logWidgetDefaultCafeteriaChange(
+      schoolId: schoolId,
+      previousCafeteria: previousCafeteria,
+      newCafeteria: cafeteriaName,
+    );
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

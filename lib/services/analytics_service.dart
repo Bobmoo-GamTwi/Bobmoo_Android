@@ -322,6 +322,21 @@ class AnalyticsService {
     );
   }
 
+  void logWidgetDefaultCafeteriaChange({
+    int? schoolId,
+    String? previousCafeteria,
+    required String newCafeteria,
+  }) {
+    _logEvent(
+      name: 'widget_default_cafeteria_change',
+      parameters: {
+        'school_id': schoolId,
+        'previous_cafeteria': previousCafeteria,
+        'new_cafeteria': newCafeteria,
+        'screen_name': 'settings_screen',
+      },
+    );
+  }
   void _logEvent({
     required String name,
     required Map<String, Object?> parameters,
