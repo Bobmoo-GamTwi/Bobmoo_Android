@@ -1,4 +1,4 @@
-package com.hwoo.bobmoo
+package com.hwoo.bobmoo.widget.data
 
 import org.json.JSONObject
 import java.util.Calendar
@@ -12,17 +12,9 @@ object AllCafeteriasDataParser {
      * @return 파싱된 MealInfo 객체의 리스트
      */
     fun parseAllCafeterias(data: String?, now: Calendar): List<MealInfo> {
-        // 데이터가 null인 경우, 사용자에게 안내 메시지를 담은 리스트를 반환합니다.
+        // 데이터가 없으면 빈 리스트를 반환하고, UI에서 EmptyState를 처리합니다.
         if (data == null) {
-            return listOf(
-                MealInfo(
-                    periodLabel = "식당 정보 없음",
-                    hoursLabel = "",
-                    cafeteriaName = "앱을 실행하여",
-                    courses = listOf("데이터를 동기화 해주세요."),
-                    status = ""
-                )
-            )
+            return emptyList()
         }
 
         return try {
@@ -45,16 +37,8 @@ object AllCafeteriasDataParser {
             mealInfoList
 
         } catch (e: Exception) {
-            // JSON 파싱 중 오류가 발생한 경우, 에러 메시지를 담은 리스트를 반환합니다.
-            listOf(
-                MealInfo(
-                    periodLabel = "데이터 오류",
-                    hoursLabel = "",
-                    cafeteriaName = "데이터 포맷을",
-                    courses = listOf("확인해주세요."),
-                    status = ""
-                )
-            )
+            // 파싱 실패도 빈 상태로 처리하여 UI 분기를 단순화합니다.
+            emptyList()
         }
     }
 }

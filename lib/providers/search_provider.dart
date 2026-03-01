@@ -52,7 +52,7 @@ class SearchProvider extends ChangeNotifier {
     final normalizedKeyword = _keyword.replaceAll(" ", "").toLowerCase();
 
     return _allItems.where((item) {
-      final itemName = item.schoolName.replaceAll(" ", "").toLowerCase();
+      final itemName = item.schoolNameK.replaceAll(" ", "").toLowerCase();
 
       return itemName.contains(normalizedKeyword);
     }).toList();

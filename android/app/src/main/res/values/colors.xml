@@ -9,4 +9,15 @@
 
     <color name="widget_title_color">#FF000000</color>
     <color name="widget_body_color">#FF555555</color>
+
+    <color name="color_red">#FFFF2200</color>
+    <color name="color_blue">#FF0064FB</color>
+    <color name="color_gray1">#FFEBEBEB</color>
+    <color name="color_gray2">#FFD9D9D9</color>
+    <color name="color_gray3">#FF61656F</color>
+    <color name="color_gray4">#FFF5F5F5</color>
+    <color name="color_gray5">#FF8F8F8F</color>
+    <color name="color_black">#FF000000</color>
+    <color name="color_white">#FFFFFFFF</color>
+    <color name="color_white10">#1AFFFFFF</color>
 </resources>

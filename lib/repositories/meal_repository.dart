@@ -90,8 +90,13 @@ class MealRepository {
   // --- Private Helper Methods ---
 
   /// DB에서 date날짜에 해당하는 데이터 반환
-  Future<List<Meal>> fetchFromDb(DateTime date) {
-    return isar.meals.filter().dateEqualTo(date).findAll();
+  Future<List<Meal>> fetchFromDb(DateTime date) async {
+    final meals = await isar.meals.filter().dateEqualTo(date).findAll();
+
+    // groupMeals()에서 restaurant.value를 바로 참조하므로 링크를 미리 로드합니다.
+    await Future.wait(meals.map((meal) => meal.restaurant.load()));
+
+    return meals;
   }
 
   Future<List<Meal>> _fetchFromApiAndSave(DateTime date) async {

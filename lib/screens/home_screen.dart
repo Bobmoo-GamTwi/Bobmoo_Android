@@ -10,7 +10,6 @@ import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/repositories/meal_repository.dart';
 import 'package:bobmoo/models/meal_widget_data.dart';
 import 'package:bobmoo/screens/settings_screen.dart';
-import 'package:bobmoo/services/permission_service.dart';
 import 'package:bobmoo/services/widget_service.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/utils/meal_utils.dart';
@@ -24,7 +23,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,13 +34,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final MealRepository _repository = locator<MealRepository>();
   late Future<List<Meal>> _mealFuture;
+  DateTime? _lastWidgetUpdateAt;
+  static const Duration _widgetUpdateMinInterval = Duration(seconds: 30);
+  bool _isWidgetUpdateInProgress = false;
 
   /// 선택한 날짜 저장할 상태 변수
   DateTime _selectedDate = DateTime.now();
-  // 배너 표시 여부를 제어할 상태 변수
-  bool _showPermissionBanner = false;
-  // 사용자가 배너를 닫았는지 여부를 저장할 변수
-  bool _bannerDismissed = false;
 
   /// 화면이 처음 나타날 때 데이터 불러오기
   @override
@@ -54,12 +51,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _checkForUpdate();
     // initState에서는 setState를 호출하지 않고, Future를 직접 할당합니다.
     _mealFuture = _fetchData();
-
-    // 앱 시작 시에도 위젯 업데이트
-    _updateWidgetOnly();
-
-    // 앱 시작 시 권한 확인
-    _checkPermissionAndShowBanner();
   }
 
   /// 위젯이 영구적으로 제거될때 호출
@@ -78,34 +69,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // 앱이 포그라운드로 돌아올 때마다 위젯 업데이트
     if (state == AppLifecycleState.resumed) {
       _updateWidgetOnly();
-
-      // 앱이 다시 활성화될 때마다 권한 확인
-      _checkPermissionAndShowBanner();
     }
-  }
-
-  /// 권한을 확인하고 배너 표시 여부를 결정하는 함수
-  Future<void> _checkPermissionAndShowBanner() async {
-    // SharedPreferences에서 '닫음' 상태를 먼저 읽어옴
-    final prefs = await SharedPreferences.getInstance();
-    _bannerDismissed = prefs.getBool('permissionBannerDismissed') ?? false;
-
-    final hasPermission = await PermissionService.canScheduleExactAlarms();
-    if (mounted) {
-      // 위젯이 화면에 있을 때만 setState 호출
-      setState(() {
-        _showPermissionBanner = !hasPermission && !_bannerDismissed;
-      });
-    }
-  }
-
-  // 배너 닫기 버튼을 눌렀을 때 실행될 함수
-  Future<void> _dismissPermissionBanner() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('permissionBannerDismissed', true);
-    setState(() {
-      _showPermissionBanner = false;
-    });
   }
 
   /// 인앱 업데이트를 확인하고, 가능하면 유연한 업데이트를 시작하는 함수
@@ -150,8 +114,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     try {
       final meals = await _repository.getMealsForDate(_selectedDate);
 
-      // 데이터 로딩 시에도 조건부 위젯 업데이트
-      _updateWidgetOnly();
+      // 위젯은 "오늘" 데이터만 사용합니다. 오늘 데이터가 있으면 재조회 없이 재사용합니다.
+      _updateWidgetOnly(
+        todayMeals: _isSameDay(_selectedDate, DateTime.now()) ? meals : null,
+      );
 
       return meals;
     } catch (e) {
@@ -170,15 +136,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   /// 위젯 데이터 업데이트 함수 (오늘날짜)
-  Future<void> _updateWidgetOnly() async {
+  Future<void> _updateWidgetOnly({List<Meal>? todayMeals}) async {
+    if (_isWidgetUpdateInProgress) {
+      if (kDebugMode) {
+        debugPrint('위젯 업데이트 스킵: 이전 작업 진행 중');
+      }
+      return;
+    }
+
+    final nowForDebounce = DateTime.now();
+    if (_lastWidgetUpdateAt != null &&
+        nowForDebounce.difference(_lastWidgetUpdateAt!) <
+            _widgetUpdateMinInterval) {
+      if (kDebugMode) {
+        debugPrint('위젯 업데이트 스킵: 너무 짧은 간격');
+      }
+      return;
+    }
+    _lastWidgetUpdateAt = nowForDebounce;
+    _isWidgetUpdateInProgress = true;
+
     // 오늘 날짜인 경우에만 위젯 업데이트
     try {
-      final today = DateTime.now();
-      // 1. 오늘 날짜의 메뉴 데이터 가져오기
-      final todayMeals = await _repository.getMealsForDate(today);
+      // 1. 오늘 날짜의 메뉴 데이터 가져오기 (인자로 들어오면 재사용)
+      final mealsForWidget =
+          todayMeals ?? await _repository.getMealsForDate(DateTime.now());
 
       // 2. 데이터를 시간대별로 그룹화
-      final groupedMeals = groupMeals(todayMeals);
+      final groupedMeals = groupMeals(mealsForWidget);
 
       // 3. 오늘 운영하는 모든 식당의 고유한 이름과 정보(Hours)를 추출
       final Map<String, Hours> uniqueCafeterias = {};
@@ -196,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
         // 기존 fromGrouped 팩토리 생성자를 완벽하게 재사용
         final widgetData = MealWidgetData.fromGrouped(
-          date: DateFormat('yyyy-MM-dd').format(today),
+          date: DateFormat('yyyy-MM-dd').format(DateTime.now()),
           cafeteriaName: cafeteriaName,
           grouped: groupedMeals.map((k, v) => MapEntry(k, v)),
           hours: hours,
@@ -224,7 +209,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (kDebugMode) {
         debugPrint('위젯 업데이트 실패: $e');
       }
+    } finally {
+      _isWidgetUpdateInProgress = false;
     }
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   /// StaleDataException 발생 시 SnackBar를 띄우는 헬퍼 함수
@@ -629,34 +620,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           // iconSize: 33.w,
           tooltip: '설정', // 풍선 도움말
           onPressed: () {
-            Navigator.of(context)
-                .push(
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        const SettingsScreen(),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                          const begin = Offset(1.0, 0.0); // 오른쪽에서 시작
-                          const end = Offset.zero; // 원래 위치로 이동
-                          const curve = Curves.ease; // 부드러운 전환 효과
+            Navigator.of(context).push(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    const SettingsScreen(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                      const begin = Offset(1.0, 0.0); // 오른쪽에서 시작
+                      const end = Offset.zero; // 원래 위치로 이동
+                      const curve = Curves.ease; // 부드러운 전환 효과
 
-                          var tween = Tween(
-                            begin: begin,
-                            end: end,
-                          ).chain(CurveTween(curve: curve));
-                          var offsetAnimation = animation.drive(tween);
+                      var tween = Tween(
+                        begin: begin,
+                        end: end,
+                      ).chain(CurveTween(curve: curve));
+                      var offsetAnimation = animation.drive(tween);
 
-                          return SlideTransition(
-                            position: offsetAnimation,
-                            child: child,
-                          );
-                        },
-                  ),
-                )
-                .then((_) {
-                  // 설정 화면에서 돌아왔을 때 배너 상태 다시 체크
-                  _checkPermissionAndShowBanner();
-                });
+                      return SlideTransition(
+                        position: offsetAnimation,
+                        child: child,
+                      );
+                    },
+              ),
+            );
           },
           padding: EdgeInsets.zero, // 내부 패딩 제거
           constraints: const BoxConstraints(), // 최소 크기 제한(48px) 제거
@@ -669,119 +655,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildPermissionBanner() {
-    final Color univColor = context.watch<UnivProvider>().univColor;
-
-    return SafeArea(
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        margin: EdgeInsets.symmetric(
-          horizontal: 20.w,
-          vertical: 12.h,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // 아이콘
-            Container(
-              padding: EdgeInsets.all(10.w),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Icon(
-                Icons.notifications_active,
-                color: Colors.orange,
-                size: 24.w,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            // 텍스트
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '위젯 권한 필요',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    '실시간 업데이트를 위해 권한을 허용해주세요',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      color: AppColors.greyTextColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: 8.w),
-            // 설정 버튼
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: univColor,
-                padding: EdgeInsets.symmetric(
-                  horizontal: 14.w,
-                  vertical: 8.h,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () async {
-                await PermissionService.openAlarmPermissionSettings();
-              },
-              child: Text(
-                '설정',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            SizedBox(width: 8.w),
-            // 닫기 버튼
-            GestureDetector(
-              onTap: _dismissPermissionBanner,
-              child: Icon(
-                Icons.close,
-                color: AppColors.greyTextColor,
-                size: 20.w,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
       body: _buildBody(),
-      bottomNavigationBar: _showPermissionBanner
-          ? _buildPermissionBanner()
-          : null,
     );
   }
 }

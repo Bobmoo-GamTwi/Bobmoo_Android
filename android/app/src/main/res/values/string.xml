@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">bobmoo</string>
-    
-    <string name="meal_widget_description">하나의 식당의 식단 정보를 표시합니다.</string>
-    <string name="all_cafeterias_widget_description">모든 식당의 식단 정보를 표시합니다.</string>
+
+    <string name="single_cafeteria_widget_label_3x2">식당 식단 위젯 (3x2)</string>
+    <string name="all_cafeterias_widget_label_5x2">전체 식당 식단 위젯 (5x2)</string>
+
+    <string name="single_cafeteria_widget_description_3x2">선택한 식당의 식단 정보를 표시합니다.</string>
+    <string name="all_cafeterias_widget_description_5x2">모든 식당의 식단 정보를 표시합니다.</string>
 
 </resources>

@@ -1,7 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
@@ -36,32 +35,32 @@
             android:value="2" />
 
         <receiver
-            android:name=".MealGlanceWidgetReceiver"
+            android:name=".widget.receiver.MealGlanceWidgetReceiver"
             android:exported="true"
-            android:label="하나의 식당 위젯">
+            android:label="@string/single_cafeteria_widget_label_3x2">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/meal_widget_info_2x2" />
+                android:resource="@xml/single_cafeteria_widget_info_3x2" />
         </receiver>
 
         <receiver
-            android:name=".AllCafeteriasGlanceWidgetReceiver"
+            android:name=".widget.receiver.AllCafeteriasGlanceWidgetReceiver"
             android:exported="true"
-            android:label="모든 식당 위젯">
+            android:label="@string/all_cafeterias_widget_label_5x2">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
 
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/all_cafeterias_widget_info" />
+                android:resource="@xml/all_cafeterias_widget_info_5x2" />
         </receiver>
 
         <receiver
-            android:name=".WidgetUpdateManager"
+            android:name=".widget.WidgetUpdateManager"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.hwoo.bobmoo.action.WIDGET_UPDATE" />
@@ -69,7 +68,7 @@
         </receiver>
 
         <receiver
-            android:name=".BootReceiver"
+            android:name=".widget.receiver.BootReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

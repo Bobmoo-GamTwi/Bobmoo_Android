@@ -1,14 +1,17 @@
-package com.hwoo.bobmoo
+package com.hwoo.bobmoo.widget.receiver
 
 import android.content.Context
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import com.hwoo.bobmoo.widget.MealGlanceWidget
+import com.hwoo.bobmoo.widget.WidgetUpdateManager
 
 class MealGlanceWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget = MealGlanceWidget()
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
-        // 중앙 관리자에게 업데이트 시작 요청
+        // 위젯 활성화/부팅 시 즉시 갱신 후 재스케줄
+        WidgetUpdateManager.triggerImmediateUpdate(context)
         WidgetUpdateManager.scheduleUpdate(context)
     }
 
