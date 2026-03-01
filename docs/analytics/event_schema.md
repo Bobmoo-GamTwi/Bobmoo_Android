@@ -3,11 +3,12 @@
 ## 1) 문서 메타
 
 - 문서 목적: BobMoo 앱의 Firebase Analytics 이벤트 수집 규칙과 이벤트 스키마를 표준화한다.
-- 문서 버전: `v0.5`
+- 문서 버전: `v0.6`
 - 작성일: `2026-03-01`
 - 오너: 밥묵자 안드로이드 개발팀
 - 상태: 초안 (Draft)
 - 변경 이력:
+  - `v0.6` (`2026-03-01`): `data_source` / `trigger_source` 파라미터 추가 및 foreground/background 구분 규칙 명시
   - `v0.5` (`2026-03-01`): `meal_api_request.request_type`에 `retry` 추가
   - `v0.4` (`2026-03-01`): `app_gate_decision` 파라미터명 `target_route` -> `destination_route`로 명확화
   - `v0.3` (`2026-03-01`): `env` 공용 파라미터(dev/prod) 추가, 앱 시작 시 default event parameter 설정 규칙 추가
@@ -34,6 +35,10 @@
 - 현재 앱 모델 기준 `school_id` 타입은 `int`다.
 - 날짜는 `yyyy-MM-dd` 문자열로 통일한다.
 - 불리언은 `true/false`로 저장한다.
+- 데이터 출처는 `data_source`로 표준화한다.
+  - `db_hit` / `api_fetched` / `db_stale_fallback`
+- 실행 컨텍스트는 `trigger_source`로 표준화한다.
+  - `foreground` / `background_workmanager`
 
 ### 3.3 식별자 및 개인정보(PII) 규칙
 
@@ -82,7 +87,7 @@
 안드로이드 단일 플랫폼 운영 기준으로 `platform` 공통 파라미터는 현재 사용하지 않는다.
 멀티 플랫폼(iOS/Web) 확장 시 재도입을 검토한다.
 
-## 6) 이벤트 카탈로그 (v0.5)
+## 6) 이벤트 카탈로그 (v0.6)
 
 ### 6.1 `screen_view`
 
@@ -129,6 +134,7 @@
   - `meal_date` (string, required) - `yyyy-MM-dd`
   - `date_offset` (int, required) - 오늘 기준 일수 차이 (`0`, `-1`, `+1`)
   - `meal_count` (int, optional) - 조회된 식단 개수
+  - `data_source` (string, optional) - `db_hit` / `api_fetched` / `db_stale_fallback`
 
 ### 6.6 `meal_api_request`
 
@@ -139,6 +145,8 @@
   - `meal_date` (string, required)
   - `request_type` (string, required) - `initial_load` / `retry` / `user_pull_to_refresh` / `date_change`
   - `change_source` (string, optional) - `request_type=date_change`일 때만, `swipe` / `picker`
+  - `data_source` (string, optional) - `db_hit` / `api_fetched` / `db_stale_fallback`
+  - `trigger_source` (string, required) - `foreground` / `background_workmanager`
   - `result` (string, required) - `success` / `network_error` / `stale_data` / `unknown_error`
 
 ### 6.7 `widget_sync`
@@ -149,6 +157,7 @@
   - `school_id` (int, optional) - 선택 학교가 있을 때만
   - `cafeteria_count` (int, optional)
   - `result` (string, required) - `success` / `failure` / `skipped_in_progress` / `skipped_debounce`
+  - `trigger_source` (string, required) - `foreground` / `background_workmanager`
 
 ### 6.8 `school_list_load_result`
 
