@@ -4,6 +4,7 @@
 package com.hwoo.bobmoo.widget.theme
 
 import androidx.compose.ui.unit.sp
+import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
@@ -16,7 +17,7 @@ data class TypographyToken(
 
 object TypographyTokens {
     private val tokens = mapOf(
-        "button.sb11" to TypographyToken(11f, 0.04f, FontWeight.Bold),
+        "button.sb11" to TypographyToken(12f, 0.04f, FontWeight.Bold),
         "button.sb12" to TypographyToken(12f, 0.02f, FontWeight.Bold),
         "caption.m15" to TypographyToken(15f, 0.02f, FontWeight.Medium),
         "caption.r15" to TypographyToken(15f, 0.02f, FontWeight.Normal),
@@ -30,11 +31,11 @@ object TypographyTokens {
         "search.b17" to TypographyToken(17f, 0.04f, FontWeight.Bold),
         "search.sb12" to TypographyToken(12f, 0.02f, FontWeight.Bold),
         "search.sb15" to TypographyToken(15f, 0.02f, FontWeight.Bold),
-        "widget.m11" to TypographyToken(11f, 0.02f, FontWeight.Medium),
-        "widget.r11" to TypographyToken(11f, 0.02f, FontWeight.Normal),
-        "widget.sb12" to TypographyToken(12f, 0.05f, FontWeight.Bold),
-        "widget.sb14" to TypographyToken(14f, 0.05f, FontWeight.Bold),
-        "widget.sb7" to TypographyToken(7f, 0.02f, FontWeight.Bold),
+        "widget.m11" to TypographyToken(13f, 0.02f, FontWeight.Medium),
+        "widget.r11" to TypographyToken(13f, 0.02f, FontWeight.Normal),
+        "widget.sb12" to TypographyToken(14f, 0.05f, FontWeight.Bold),
+        "widget.sb14" to TypographyToken(16f, 0.05f, FontWeight.Bold),
+        "widget.sb7" to TypographyToken(9f, 0.02f, FontWeight.Bold),
     )
 
     private fun token(key: String): TypographyToken {
@@ -56,7 +57,8 @@ object TypographyTokens {
         return TextStyle(
             fontSize = token.fontSizeSp.sp,
             fontWeight = token.fontWeight,
-            color = color
+            color = color,
+            fontFamily = FontFamily.SansSerif,
         )
     }
 }
