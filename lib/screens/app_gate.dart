@@ -1,4 +1,5 @@
 import 'package:bobmoo/providers/univ_provider.dart';
+import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/screens/loading_screen.dart';
 import 'package:bobmoo/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -39,9 +40,15 @@ class _AppGateState extends State<AppGate> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      final targetRoute = (univProvider.selectedUniversity != null)
-          ? "/home"
-          : "/onboarding";
+      final hasSelectedSchool = univProvider.selectedUniversity != null;
+      final targetRoute = hasSelectedSchool ? "/home" : "/onboarding";
+      final analyticsDestinationRoute = hasSelectedSchool
+          ? AppGateDestinationRoute.home
+          : AppGateDestinationRoute.onboarding;
+      AnalyticsService.instance.logAppGateDecision(
+        destinationRoute: analyticsDestinationRoute,
+        hasSelectedSchool: hasSelectedSchool,
+      );
 
       Navigator.of(
         context,

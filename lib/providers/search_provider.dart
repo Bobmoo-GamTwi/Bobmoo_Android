@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:bobmoo/models/university.dart';
+import 'package:bobmoo/services/analytics_service.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
@@ -14,10 +15,26 @@ class SearchProvider extends ChangeNotifier {
 
   // 1. 앱 시작 시 딱 한 번 호출해서 상태를 복원합니다.
   Future<void> init() async {
-    _allItems = await _loadUniversities();
+    final stopwatch = Stopwatch()..start();
 
-    _isLoading = false;
-    notifyListeners();
+    try {
+      _allItems = await _loadUniversities();
+      AnalyticsService.instance.logSchoolListLoadResult(
+        result: SchoolListLoadResult.success,
+        schoolCount: _allItems.length,
+        loadTimeMs: stopwatch.elapsedMilliseconds,
+      );
+    } catch (error) {
+      AnalyticsService.instance.logSchoolListLoadResult(
+        result: SchoolListLoadResult.failure,
+        loadTimeMs: stopwatch.elapsedMilliseconds,
+      );
+      rethrow;
+    } finally {
+      stopwatch.stop();
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<List<University>> _loadUniversities() async {

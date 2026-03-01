@@ -20,10 +20,28 @@ class NetworkException implements Exception {
 class StaleDataException implements Exception {
   final List<Meal> staleData;
   final String message;
+  final MealDataSource dataSource;
 
   StaleDataException(
     this.staleData, {
     this.message = "오프라인 상태입니다. 마지막으로 저장된 정보를 표시합니다.",
+    this.dataSource = MealDataSource.dbStaleFallback,
+  });
+}
+
+enum MealDataSource {
+  dbHit,
+  apiFetched,
+  dbStaleFallback,
+}
+
+class MealFetchResult {
+  final List<Meal> meals;
+  final MealDataSource dataSource;
+
+  MealFetchResult({
+    required this.meals,
+    required this.dataSource,
   });
 }
 
@@ -38,6 +56,12 @@ class MealRepository {
 
   /// 핵심 함수: 특정 날짜의 식단 데이터를 가져옴
   Future<List<Meal>> getMealsForDate(DateTime date) async {
+    final result = await getMealsForDateWithSource(date);
+    return result.meals;
+  }
+
+  /// 핵심 함수(분석용): 특정 날짜 식단과 데이터 출처를 함께 반환
+  Future<MealFetchResult> getMealsForDateWithSource(DateTime date) async {
     final targetDate = DateUtils.dateOnly(date);
 
     // 1. 해당 날짜의 캐시 상태 확인
@@ -56,7 +80,11 @@ class MealRepository {
         print("ℹ️ [Cache Miss/Stale] API를 호출하여 데이터를 갱신합니다: $targetDate");
       }
       try {
-        return await _fetchFromApiAndSave(targetDate);
+        final meals = await _fetchFromApiAndSave(targetDate);
+        return MealFetchResult(
+          meals: meals,
+          dataSource: MealDataSource.apiFetched,
+        );
       } catch (e) {
         if (kDebugMode) {
           print("🚨 [API Error] API 호출 실패: $e");
@@ -74,7 +102,11 @@ class MealRepository {
       if (kDebugMode) {
         print("✅ [Cache Hit] DB에서 신선한 데이터를 가져옵니다: $targetDate");
       }
-      return await fetchFromDb(targetDate);
+      final meals = await fetchFromDb(targetDate);
+      return MealFetchResult(
+        meals: meals,
+        dataSource: MealDataSource.dbHit,
+      );
     }
   }
 

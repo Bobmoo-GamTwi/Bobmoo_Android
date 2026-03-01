@@ -1,13 +1,10 @@
 import 'package:bobmoo/constants/app_constants.dart';
 import 'package:bobmoo/locator.dart';
-import 'package:bobmoo/models/all_cafeterias_widget_data.dart';
-import 'package:bobmoo/models/meal_widget_data.dart';
-import 'package:bobmoo/models/menu_model.dart';
 import 'package:bobmoo/repositories/meal_repository.dart';
-import 'package:bobmoo/services/widget_service.dart';
-import 'package:bobmoo/utils/meal_utils.dart';
+import 'package:bobmoo/screens/home_widget_sync_helper.dart';
+import 'package:bobmoo/services/analytics_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
-import 'package:intl/intl.dart';
 import 'package:workmanager/workmanager.dart';
 
 // WorkManager가 호출할 최상위 함수. @pragma 어노테이션은 Dart 컴파일러에게 이 함수가 코드상에서
@@ -15,6 +12,9 @@ import 'package:workmanager/workmanager.dart';
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
+    await Firebase.initializeApp();
+    await AnalyticsService.instance.initialize();
+
     // Locator (GetIt)를 초기화합니다. 백그라운드 isolate는 앱의 메인 isolate와
     // 메모리를 공유하지 않으므로, 사용하는 서비스들을 다시 초기화해야 합니다.
     await setupLocator();
@@ -25,10 +25,16 @@ void callbackDispatcher() {
         try {
           // home_screen.dart에 있던 위젯 업데이트 로직을 그대로 사용합니다.
           final repository = locator<MealRepository>();
+          final syncHelper = HomeWidgetSyncHelper(repository: repository);
           final today = DateTime.now();
           final todayMeals = await repository.getMealsForDate(today);
 
           if (todayMeals.isEmpty) {
+            AnalyticsService.instance.logWidgetSync(
+              cafeteriaCount: 0,
+              triggerSource: AnalyticsTriggerSource.backgroundWorkmanager,
+              result: WidgetSyncResult.success,
+            );
             if (kDebugMode) {
               debugPrint(
                 '[BackgroundService] No meals for today. Skipping widget update.',
@@ -38,39 +44,24 @@ void callbackDispatcher() {
             return Future.value(true); // 데이터가 없으면 성공으로 처리
           }
 
-          // 데이터 가공 로직
-          final groupedMeals = groupMeals(todayMeals);
-          final Map<String, Hours> uniqueCafeterias = {};
-          groupedMeals.values.expand((list) => list).forEach((mealByCafeteria) {
-            uniqueCafeterias[mealByCafeteria.cafeteriaName] =
-                mealByCafeteria.hours;
-          });
-
-          final List<MealWidgetData> allCafeteriasData = [];
-          for (var entry in uniqueCafeterias.entries) {
-            final cafeteriaName = entry.key;
-            final hours = entry.value;
-            final widgetData = MealWidgetData.fromGrouped(
-              date: DateFormat('yyyy-MM-dd').format(today),
-              cafeteriaName: cafeteriaName,
-              grouped: groupedMeals.map((k, v) => MapEntry(k, v)),
-              hours: hours,
-            );
-            allCafeteriasData.add(widgetData);
-          }
-
-          final widgetDataContainer = AllCafeteriasWidgetData(
-            cafeterias: allCafeteriasData,
+          final cafeteriaCount = await syncHelper.syncWidgetData(
+            todayMeals: todayMeals,
           );
-
-          // 위젯 데이터 저장 및 업데이트
-          await WidgetService.saveAllCafeteriasWidgetData(widgetDataContainer);
+          AnalyticsService.instance.logWidgetSync(
+            cafeteriaCount: cafeteriaCount,
+            triggerSource: AnalyticsTriggerSource.backgroundWorkmanager,
+            result: WidgetSyncResult.success,
+          );
 
           if (kDebugMode) {
             debugPrint('[BackgroundService] Successfully updated widget data.');
           }
           return Future.value(true); // 성공
         } catch (e) {
+          AnalyticsService.instance.logWidgetSync(
+            triggerSource: AnalyticsTriggerSource.backgroundWorkmanager,
+            result: WidgetSyncResult.failure,
+          );
           if (kDebugMode) {
             debugPrint('[BackgroundService] Error executing task: $e');
           }

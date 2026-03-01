@@ -9,7 +9,9 @@ import 'package:bobmoo/screens/home_screen.dart';
 import 'package:bobmoo/screens/onboarding_screen.dart';
 import 'package:bobmoo/screens/select_school_screen.dart';
 import 'package:bobmoo/screens/settings_screen.dart';
+import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/services/background_service.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +27,7 @@ void main() async {
 
   // Firebase 초기화
   await Firebase.initializeApp();
+  await AnalyticsService.instance.initialize();
 
   // 한국어 로케일데이터 추가
   await initializeDateFormatting('ko_KR', null);
@@ -64,6 +67,48 @@ void main() async {
 class BobMooApp extends StatelessWidget {
   const BobMooApp({super.key});
 
+  static final FirebaseAnalyticsObserver _analyticsObserver =
+      FirebaseAnalyticsObserver(
+        analytics: FirebaseAnalytics.instance,
+        nameExtractor: (settings) {
+          final rawRouteName = settings.name;
+          final isWidgetCallbackRoute = () {
+            if (rawRouteName == null || rawRouteName.isEmpty) {
+              return true;
+            }
+            if (rawRouteName.startsWith('/CALLBACK')) {
+              return true;
+            }
+
+            final uri = Uri.tryParse(rawRouteName);
+            if ((uri?.path ?? '').toUpperCase().startsWith('/CALLBACK')) {
+              return true;
+            }
+
+            return rawRouteName.toUpperCase().contains(':/CALLBACK');
+          }();
+
+          final normalizedRouteName = isWidgetCallbackRoute
+              ? '/'
+              : rawRouteName;
+
+          switch (normalizedRouteName) {
+            case '/':
+              return 'app_gate_screen';
+            case '/onboarding':
+              return 'onboarding_screen';
+            case '/select_school':
+              return 'select_school_screen';
+            case '/home':
+              return 'home_screen';
+            case '/settings':
+              return 'settings_screen';
+            default:
+              return normalizedRouteName ?? 'unknown_screen';
+          }
+        },
+      );
+
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
@@ -91,8 +136,9 @@ class BobMooApp extends StatelessWidget {
               // Glance 위젯 액션(e.g. glance-action:/CALLBACK?...) fallback
               return rawRouteName.toUpperCase().contains(':/CALLBACK');
             }();
-            final normalizedRouteName =
-                isWidgetCallbackRoute ? "/" : rawRouteName;
+            final normalizedRouteName = isWidgetCallbackRoute
+                ? "/"
+                : rawRouteName;
 
             if (kDebugMode) {
               debugPrint(
@@ -116,11 +162,21 @@ class BobMooApp extends StatelessWidget {
 
               // 학교 선택 화면 라우트
               case "/select_school":
-                // 여기만 “반환 타입”을 명시
-                final bool allowBack = settings.arguments as bool;
+                final args = settings.arguments;
+                bool allowBack = false;
+                String entryPoint = 'onboarding';
+
+                if (args is Map<String, dynamic>) {
+                  allowBack = args['allowBack'] as bool? ?? false;
+                  entryPoint = args['entryPoint'] as String? ?? 'onboarding';
+                }
+
                 return MaterialPageRoute<University?>(
                   settings: settings,
-                  builder: (_) => SelectSchoolScreen(allowBack: allowBack),
+                  builder: (_) => SelectSchoolScreen(
+                    allowBack: allowBack,
+                    entryPoint: entryPoint,
+                  ),
                 );
 
               // 홈화면 라우트
@@ -132,9 +188,27 @@ class BobMooApp extends StatelessWidget {
 
               // 설정화면 라우트
               case "/settings":
-                return MaterialPageRoute(
+                return PageRouteBuilder(
                   settings: settings,
-                  builder: (_) => const SettingsScreen(),
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      const SettingsScreen(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                        const begin = Offset(1.0, 0.0);
+                        const end = Offset.zero;
+                        const curve = Curves.ease;
+
+                        final tween = Tween(
+                          begin: begin,
+                          end: end,
+                        ).chain(CurveTween(curve: curve));
+                        final offsetAnimation = animation.drive(tween);
+
+                        return SlideTransition(
+                          position: offsetAnimation,
+                          child: child,
+                        );
+                      },
                 );
 
               // 잘못된 라우트 이름
@@ -154,6 +228,7 @@ class BobMooApp extends StatelessWidget {
           },
           title: '밥묵자',
           theme: _getThemeData(),
+          navigatorObservers: [_analyticsObserver],
           locale: const Locale('ko', 'KR'), // 앱의 기본 언어를 한국어로 설정
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
