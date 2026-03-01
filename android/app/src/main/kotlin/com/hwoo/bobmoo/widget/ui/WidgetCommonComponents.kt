@@ -24,6 +24,7 @@ import androidx.glance.text.Text
 import com.hwoo.bobmoo.R
 import com.hwoo.bobmoo.widget.data.MealInfo
 import com.hwoo.bobmoo.widget.theme.TypographyTokens
+import com.hwoo.bobmoo.widget.theme.WidgetTypography
 
 private data class StatusColors(val background: Color, val text: Color)
 
@@ -31,7 +32,7 @@ private data class StatusColors(val background: Color, val text: Color)
 @Composable
 fun WidgetDateText(
     dateLabel: String,
-    dateToken: String = "widget.sb7"
+    dateToken: String = WidgetTypography.DATE
 ) {
     if (dateLabel.isBlank()) return
     Text(
@@ -48,7 +49,7 @@ fun WidgetDateText(
 @Composable
 fun WidgetPeriodText(
     periodLabel: String,
-    periodToken: String = "widget.sb14"
+    periodToken: String = WidgetTypography.PERIOD
 ) {
     Text(
         text = periodLabel,
@@ -59,9 +60,9 @@ fun WidgetPeriodText(
 
 /** 식당이름 표시용 텍스트 */
 @Composable
-fun cafeteriaNameText(
+fun CafeteriaNameText(
     cafeteriaName: String,
-    periodToken: String = "widget.sb12"
+    periodToken: String = WidgetTypography.CAFETERIA_NAME
 ) {
     Text(
         text = cafeteriaName,
@@ -74,11 +75,11 @@ fun cafeteriaNameText(
 @Composable
 fun WidgetHoursText(
     hoursLabel: String,
-    hourToken: String = "widget.sb7"
+    hourToken: String = WidgetTypography.HOURS
 ) {
     if (hoursLabel.isBlank()) return
     Text(
-        text = "($hoursLabel)",
+        text = hoursLabel,
         style = TypographyTokens.textStyle(
             key = hourToken,
             color = ColorProvider(Color(0xFF61656F), Color(0xFF61656F))
@@ -99,7 +100,10 @@ private fun statusColors(globalStatus: String): StatusColors? {
 
 /** 운영배지 */
 @Composable
-fun WidgetStatusBadge(globalStatus: String) {
+fun WidgetStatusBadge(
+    globalStatus: String,
+    textToken: String = WidgetTypography.BADGE,
+) {
     val statusColors = statusColors(globalStatus) ?: return
     Box(
         modifier = GlanceModifier
@@ -111,46 +115,12 @@ fun WidgetStatusBadge(globalStatus: String) {
         Text(
             text = globalStatus,
             style = TypographyTokens.textStyle(
-                key = "button.sb12",
+                key = textToken,
                 color = ColorProvider(statusColors.text, statusColors.text)
             )
         )
     }
 }
-
-@Composable
-fun WidgetPeriodStatusRow(
-    periodLabel: String,
-    globalStatus: String,
-    periodToken: String = "head.b21",
-    topPadding: Int = 0
-) {
-    Row(
-        modifier = GlanceModifier.fillMaxWidth().padding(top = topPadding.dp),
-        verticalAlignment = Alignment.Vertical.CenterVertically
-    ) {
-        WidgetPeriodText(periodLabel = periodLabel, periodToken = periodToken)
-        Spacer(modifier = GlanceModifier.defaultWeight())
-        WidgetStatusBadge(globalStatus = globalStatus)
-    }
-}
-
-@Composable
-fun MealPeriodHeader(
-    periodLabel: String,
-    globalStatus: String,
-    periodToken: String = "head.b21",
-    topPadding: Int = 0
-) {
-    WidgetPeriodStatusRow(
-        periodLabel = periodLabel,
-        globalStatus = globalStatus,
-        periodToken = periodToken,
-        topPadding = topPadding
-    )
-    Spacer(modifier = GlanceModifier.height(10.dp))
-}
-
 
 /**
  * 식당 정보 세로 칼럼
@@ -161,9 +131,10 @@ fun MealPeriodHeader(
 fun CafeteriaColumn(
     mealInfo: MealInfo,
     maxMenuLines: Int? = null,
-    cafeteriaNameToken: String = "search.b17",
-    hourToken: String = "widget.m11",
-    menuToken: String = "widget.sb12",
+    cafeteriaNameToken: String = WidgetTypography.CAFETERIA_NAME,
+    hourToken: String = WidgetTypography.HOURS,
+    menuToken: String = WidgetTypography.COURSE,
+    showCafeteriaName: Boolean = true,
     showHours: Boolean = true
 ) {
     val calculatedMaxLines = maxMenuLines ?: when {
@@ -173,14 +144,15 @@ fun CafeteriaColumn(
     }
 
     Column(
-        modifier = GlanceModifier.fillMaxHeight(),
         horizontalAlignment = Alignment.Horizontal.Start
     ) {
-        Text(
-            text = mealInfo.cafeteriaName,
-            style = TypographyTokens.textStyle(key = cafeteriaNameToken),
-            maxLines = 1
-        )
+        if (showCafeteriaName) {
+            Text(
+                text = mealInfo.cafeteriaName,
+                style = TypographyTokens.textStyle(key = cafeteriaNameToken),
+                maxLines = 1
+            )
+        }
         if (showHours) {
             Spacer(modifier = GlanceModifier.height(2.dp))
             WidgetHoursText(hoursLabel = mealInfo.hoursLabel, hourToken = hourToken)
@@ -188,13 +160,44 @@ fun CafeteriaColumn(
         } else {
             Spacer(modifier = GlanceModifier.height(6.dp))
         }
-        mealInfo.courses.forEach { line ->
-            Text(
-                text = line,
-                style = TypographyTokens.textStyle(key = menuToken),
-                modifier = GlanceModifier.padding(top = 3.dp),
-                maxLines = calculatedMaxLines
-            )
+        CourseList(
+            courses = mealInfo.courses,
+            menuToken = menuToken,
+            maxMenuLines = calculatedMaxLines
+        )
+    }
+}
+
+@Composable
+fun CourseList(
+    courses: List<String>,
+    menuToken: String = WidgetTypography.COURSE,
+    maxMenuLines: Int = 1
+) {
+    val visibleCourseCount = courses.size.coerceAtLeast(1)
+    val dividerHeightDp = ((visibleCourseCount * 26) + ((visibleCourseCount - 1) * 3)).dp
+
+    Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+        Column {
+            Spacer(modifier = GlanceModifier.height(5.dp))
+            Box(
+                modifier = GlanceModifier
+                    .width(1.dp)
+                    .height(dividerHeightDp)
+                    .background(Color(0xFF8F8F8F))
+            ) {}
+            Spacer(modifier = GlanceModifier.height(5.dp))
+        }
+        Spacer(modifier = GlanceModifier.width(10.dp))
+        Column {
+            courses.forEachIndexed { index, line ->
+                Text(
+                    text = line,
+                    style = TypographyTokens.textStyle(key = menuToken),
+                    modifier = GlanceModifier.padding(top = if (index == 0) 0.dp else 3.dp),
+                    maxLines = maxMenuLines
+                )
+            }
         }
     }
 }
@@ -220,13 +223,13 @@ fun WidgetEmptyState() {
         Spacer(modifier = GlanceModifier.height(12.dp))
         Text(
             text = "등록된 식단이 없어요",
-            style = TypographyTokens.textStyle(key = "head.sb18")
+            style = TypographyTokens.textStyle(key = WidgetTypography.EMPTY_TITLE)
         )
         Spacer(modifier = GlanceModifier.height(10.dp))
         Text(
             text = "식단 정보가 등록되지 않았어요.",
             style = TypographyTokens.textStyle(
-                key = "widget.m11",
+                key = WidgetTypography.EMPTY_BODY,
                 color = ColorProvider(Color.Gray, Color.Gray)
             )
         )
@@ -234,7 +237,7 @@ fun WidgetEmptyState() {
         Text(
             text = "잠시 후 다시 확인해주세요.",
             style = TypographyTokens.textStyle(
-                key = "widget.m11",
+                key = WidgetTypography.EMPTY_BODY,
                 color = ColorProvider(Color.Gray, Color.Gray)
             )
         )

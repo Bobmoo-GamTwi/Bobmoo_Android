@@ -20,6 +20,7 @@ import androidx.glance.layout.padding
 import androidx.glance.layout.width
 import com.hwoo.bobmoo.MainActivity
 import com.hwoo.bobmoo.widget.data.MealInfo
+import com.hwoo.bobmoo.widget.theme.WidgetTypography
 import es.antonborri.home_widget.actionStartActivity
 
 @Composable
@@ -38,16 +39,19 @@ fun AllCafeteriasWidgetContent(context: Context, mealInfos: List<MealInfo>) {
         if (mealInfos.isEmpty() || mealInfos.all { it.isEmptyDraftState() }) {
             WidgetEmptyState()
         } else {
-            WidgetDateText(
-                dateLabel = mealInfos.firstOrNull()?.dateLabel ?: "",
-                dateToken = "widget.sb12"
-            )
-            Spacer(modifier = GlanceModifier.height(6.dp))
-            WidgetPeriodStatusRow(
-                globalStatus = globalStatus,
-                periodLabel = periodLabel,
-                periodToken = "head.b21"
-            )
+            Row (modifier = GlanceModifier.fillMaxWidth())
+            {
+                Column {
+                    WidgetDateText(
+                        dateLabel = mealInfos.firstOrNull()?.dateLabel ?: "",
+                    )
+                    Spacer(modifier = GlanceModifier.height(6.dp))
+                    WidgetPeriodText(periodLabel)
+                }
+                Spacer(modifier = GlanceModifier.defaultWeight())
+                WidgetStatusBadge(globalStatus)
+            }
+
             Spacer(modifier = GlanceModifier.height(10.dp))
 
             Row(
@@ -62,14 +66,13 @@ fun AllCafeteriasWidgetContent(context: Context, mealInfos: List<MealInfo>) {
                         CafeteriaColumn(
                             mealInfo = mealInfo,
                             maxMenuLines = 1,
-                            cafeteriaNameToken = "widget.sb14",
-                            hourToken = "widget.m11",
-                            menuToken = "widget.sb12"
+                            cafeteriaNameToken = WidgetTypography.CAFETERIA_NAME,
+                            hourToken = WidgetTypography.HOURS,
+                            menuToken = WidgetTypography.COURSE
                         )
                     }
-
-                    if (index < mealInfos.size - 1) {
-                        VerticalSeparator()
+                    if (1 - index >= 0) {
+                        Spacer(modifier = GlanceModifier.width(12.dp))
                     }
                 }
             }

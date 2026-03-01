@@ -8,12 +8,16 @@ import androidx.glance.GlanceModifier
 import androidx.glance.action.clickable
 import androidx.glance.background
 import androidx.glance.layout.Column
+import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.width
 import com.hwoo.bobmoo.MainActivity
 import com.hwoo.bobmoo.widget.data.MealInfo
+import com.hwoo.bobmoo.widget.theme.WidgetTypography
 import es.antonborri.home_widget.actionStartActivity
 
 @Composable
@@ -30,25 +34,23 @@ fun MealWidgetContent(context: Context, mealInfo: MealInfo) {
         } else {
             WidgetDateText(
                 dateLabel = mealInfo.dateLabel,
-                dateToken = "widget.sb12"
             )
             Spacer(modifier = GlanceModifier.height(6.dp))
-            WidgetPeriodStatusRow(
-                globalStatus = mealInfo.status,
-                periodLabel = mealInfo.periodLabel,
-                periodToken = "head.b30"
-            )
-            Spacer(modifier = GlanceModifier.height(2.dp))
-            WidgetHoursText(hoursLabel = mealInfo.hoursLabel, hourToken = "widget.sb12")
+            Row {
+                CafeteriaNameText(mealInfo.cafeteriaName)
+                Spacer(modifier = GlanceModifier.width(5.dp))
+                WidgetHoursText(hoursLabel = mealInfo.hoursLabel, hourToken = WidgetTypography.HOURS)
+            }
             Spacer(modifier = GlanceModifier.height(10.dp))
-            CafeteriaColumn(
-                mealInfo = mealInfo,
-                maxMenuLines = 2,
-                cafeteriaNameToken = "widget.sb14",
-                hourToken = "widget.sb12",
-                menuToken = "widget.sb12",
-                showHours = false
+            CourseList(
+                courses = mealInfo.courses,
+                maxMenuLines = 1,
             )
+            Spacer(modifier = GlanceModifier.height(8.dp))
+            Row(modifier = GlanceModifier.fillMaxWidth()) {
+                Spacer(modifier = GlanceModifier.defaultWeight())
+                WidgetStatusBadge(mealInfo.status)
+            }
         }
     }
 }
