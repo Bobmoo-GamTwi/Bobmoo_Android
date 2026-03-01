@@ -320,9 +320,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
-  void _loadMeals() {
+  void _retryMeals() {
     _analyticsHelper.setMealRequestContext(
-      requestType: MealApiRequestType.initialLoad,
+      requestType: MealApiRequestType.retry,
     );
     setState(() {
       _mealFuture = _fetchData();
@@ -396,7 +396,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   AnalyticsService.instance.logViewMeal(
                     schoolId: schoolId,
                     mealDate: mealDate,
-                    dateOffset: _analyticsHelper.dateOffsetFromToday(_selectedDate),
+                    dateOffset: _analyticsHelper.dateOffsetFromToday(
+                      _selectedDate,
+                    ),
                     mealCount: localData.length,
                   );
                 }
@@ -574,7 +576,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   previousErrorType: _analyticsHelper.errorTypeOf(error),
                 );
               }
-              _loadMeals();
+              _retryMeals();
             }, // 재시도 버튼
             child: const Text("다시 시도"),
           ),

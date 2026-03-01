@@ -37,6 +37,7 @@ enum AnalyticsChangeSource {
 
 enum MealApiRequestType {
   initialLoad('initial_load'),
+  retry('retry'),
   userPullToRefresh('user_pull_to_refresh'),
   dateChange('date_change');
 
