@@ -8,6 +8,28 @@ class AnalyticsService {
 
   static final AnalyticsService instance = AnalyticsService._();
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
+  bool _isInitialized = false;
+
+  String get environment => kReleaseMode ? 'prod' : 'dev';
+
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+    _isInitialized = true;
+
+    try {
+      await _analytics.setDefaultEventParameters({
+        'env': environment,
+      });
+      await _analytics.setUserProperty(
+        name: 'env',
+        value: environment,
+      );
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[Analytics] initialize failed: $error');
+      }
+    }
+  }
 
   void logAppGateDecision({
     required String targetRoute,

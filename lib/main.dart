@@ -9,6 +9,7 @@ import 'package:bobmoo/screens/home_screen.dart';
 import 'package:bobmoo/screens/onboarding_screen.dart';
 import 'package:bobmoo/screens/select_school_screen.dart';
 import 'package:bobmoo/screens/settings_screen.dart';
+import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/services/background_service.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -26,6 +27,7 @@ void main() async {
 
   // Firebase 초기화
   await Firebase.initializeApp();
+  await AnalyticsService.instance.initialize();
 
   // 한국어 로케일데이터 추가
   await initializeDateFormatting('ko_KR', null);
