@@ -53,6 +53,7 @@ class MealRepository {
   final MenuService menuService;
   final SharedPreferences prefs;
   static const String _fallbackSchoolNameK = '인하대학교';
+  static const String _lastFetchedSchoolNameKKey = 'lastFetchedSchoolNameK';
 
   MealRepository({
     required this.isar,
@@ -69,6 +70,10 @@ class MealRepository {
   /// 핵심 함수(분석용): 특정 날짜 식단과 데이터 출처를 함께 반환
   Future<MealFetchResult> getMealsForDateWithSource(DateTime date) async {
     final targetDate = DateUtils.dateOnly(date);
+    final schoolNameK = _resolveSchoolNameK();
+    final lastFetchedSchoolNameK = prefs.getString(_lastFetchedSchoolNameKKey);
+    final isSchoolChanged =
+        lastFetchedSchoolNameK == null || lastFetchedSchoolNameK != schoolNameK;
 
     // 1. 해당 날짜의 캐시 상태 확인
     final cacheStatus = await isar.menuCacheStatuses
@@ -79,14 +84,25 @@ class MealRepository {
     final bool isCacheStale =
         cacheStatus == null ||
         DateTime.now().difference(cacheStatus.lastFetchedAt).inHours >= 24;
+    final shouldFetchFromApi = isCacheStale || isSchoolChanged;
 
-    if (isCacheStale) {
+    if (shouldFetchFromApi) {
       // 2a. 캐시가 없거나 오래되었으면 API 호출
       if (kDebugMode) {
-        print("ℹ️ [Cache Miss/Stale] API를 호출하여 데이터를 갱신합니다: $targetDate");
+        print(
+          "ℹ️ [Cache Miss/Stale/SchoolChanged] API를 호출하여 데이터를 갱신합니다: $targetDate, school=$schoolNameK",
+        );
       }
       try {
-        final meals = await _fetchFromApiAndSave(targetDate);
+        if (isSchoolChanged) {
+          // 학교 변경 시 이전 학교 캐시가 노출되지 않도록 로컬 캐시를 먼저 비웁니다.
+          await _clearAllMealCaches();
+        }
+        final meals = await _fetchFromApiAndSave(
+          targetDate,
+          schoolNameK: schoolNameK,
+        );
+        await prefs.setString(_lastFetchedSchoolNameKKey, schoolNameK);
         return MealFetchResult(
           meals: meals,
           dataSource: MealDataSource.apiFetched,
@@ -95,6 +111,11 @@ class MealRepository {
         if (kDebugMode) {
           print("🚨 [API Error] API 호출 실패: $e");
         }
+        // 학교 변경 직후에는 이전 학교 stale 데이터가 섞일 수 있어 fallback을 사용하지 않습니다.
+        if (isSchoolChanged) {
+          rethrow;
+        }
+
         // API 호출 실패 시, DB에 오래된 데이터라도 있는지 확인 후 반환
         final staleData = await fetchFromDb(targetDate);
         if (staleData.isNotEmpty) {
@@ -119,10 +140,16 @@ class MealRepository {
   /// UI에서 Pull-to-Refresh(당겨서 새로고침)를 위한 함수
   Future<List<Meal>> forceRefreshMeals(DateTime date) async {
     final targetDate = DateUtils.dateOnly(date);
+    final schoolNameK = _resolveSchoolNameK();
     if (kDebugMode) {
       print("🔄 [Force Refresh] 강제로 데이터를 새로고침합니다: $targetDate");
     }
-    return await _fetchFromApiAndSave(targetDate);
+    final meals = await _fetchFromApiAndSave(
+      targetDate,
+      schoolNameK: schoolNameK,
+    );
+    await prefs.setString(_lastFetchedSchoolNameKKey, schoolNameK);
+    return meals;
   }
 
   // --- Private Helper Methods ---
@@ -137,9 +164,10 @@ class MealRepository {
     return meals;
   }
 
-  Future<List<Meal>> _fetchFromApiAndSave(DateTime date) async {
-    final schoolNameK = _resolveSchoolNameK();
-
+  Future<List<Meal>> _fetchFromApiAndSave(
+    DateTime date, {
+    required String schoolNameK,
+  }) async {
     // 1. API에서 데이터 가져오기
     final menuResponse = await menuService.getMenu(
       date,
@@ -174,6 +202,13 @@ class MealRepository {
     }
 
     return _fallbackSchoolNameK;
+  }
+
+  Future<void> _clearAllMealCaches() async {
+    await isar.writeTxn(() async {
+      await isar.meals.clear();
+      await isar.menuCacheStatuses.clear();
+    });
   }
 
   /// response 응답을 DB에 추가
