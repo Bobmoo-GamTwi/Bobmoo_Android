@@ -3,15 +3,12 @@ import 'dart:io';
 import 'package:bobmoo/collections/meal_collection.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/locator.dart';
-import 'package:bobmoo/models/all_cafeterias_widget_data.dart';
 import 'package:bobmoo/models/meal_by_cafeteria.dart';
-import 'package:bobmoo/models/menu_model.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/repositories/meal_repository.dart';
-import 'package:bobmoo/models/meal_widget_data.dart';
 import 'package:bobmoo/screens/home_analytics_helper.dart';
+import 'package:bobmoo/screens/home_widget_sync_helper.dart';
 import 'package:bobmoo/services/analytics_service.dart';
-import 'package:bobmoo/services/widget_service.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/utils/meal_utils.dart';
 import 'package:bobmoo/ui/components/cards/time_grouped_card.dart';
@@ -34,6 +31,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final MealRepository _repository = locator<MealRepository>();
+  late final HomeWidgetSyncHelper _widgetSyncHelper;
   late Future<List<Meal>> _mealFuture;
   DateTime? _lastWidgetUpdateAt;
   static const Duration _widgetUpdateMinInterval = Duration(seconds: 30);
@@ -54,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _widgetSyncHelper = HomeWidgetSyncHelper(repository: _repository);
     // 앱 상태를 확인하기 위한 옵저버 할당
     WidgetsBinding.instance.addObserver(this);
     // 앱 시작 시 업데이트 확인
@@ -227,57 +226,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _lastWidgetUpdateAt = nowForDebounce;
     _isWidgetUpdateInProgress = true;
 
-    // 오늘 날짜인 경우에만 위젯 업데이트
     try {
-      // 1. 오늘 날짜의 메뉴 데이터 가져오기 (인자로 들어오면 재사용)
-      final mealsForWidget =
-          todayMeals ?? await _repository.getMealsForDate(DateTime.now());
-
-      // 2. 데이터를 시간대별로 그룹화
-      final groupedMeals = groupMeals(mealsForWidget);
-
-      // 3. 오늘 운영하는 모든 식당의 고유한 이름과 정보(Hours)를 추출
-      final Map<String, Hours> uniqueCafeterias = {};
-
-      // groupedMeals가 비어있으면 이 반복문은 실행되지 않음 -> 안전함
-      groupedMeals.values.expand((list) => list).forEach((mealByCafeteria) {
-        uniqueCafeterias[mealByCafeteria.cafeteriaName] = mealByCafeteria.hours;
-      });
-
-      // 4. 각 식당별로 MealWidgetData 객체를 생성하여 리스트에 담기
-      final List<MealWidgetData> allCafeteriasData = [];
-      for (var entry in uniqueCafeterias.entries) {
-        final cafeteriaName = entry.key;
-        final hours = entry.value;
-
-        // 기존 fromGrouped 팩토리 생성자를 완벽하게 재사용
-        final widgetData = MealWidgetData.fromGrouped(
-          date: DateFormat('yyyy-MM-dd').format(DateTime.now()),
-          cafeteriaName: cafeteriaName,
-          grouped: groupedMeals.map((k, v) => MapEntry(k, v)),
-          hours: hours,
-        );
-        allCafeteriasData.add(widgetData);
-      }
-
-      // [핵심]
-      // 데이터가 없으면 allCafeteriasData는 빈 리스트 []가 됩니다.
-      // 이 빈 리스트를 그대로 저장하면, 위젯은 데이터를 찾지 못합니다.
-
-      // 5. 모든 식당 데이터가 담긴 리스트를 새로운 컨테이너 모델로 감싸기
-      final widgetDataContainer = AllCafeteriasWidgetData(
-        cafeterias: allCafeteriasData,
+      final cafeteriaCount = await _widgetSyncHelper.syncWidgetData(
+        todayMeals: todayMeals,
       );
-
       if (kDebugMode) {
-        debugPrint('✅ ${allCafeteriasData.length}개 식당 위젯 데이터 업데이트 성공!');
+        debugPrint('✅ $cafeteriaCount개 식당 위젯 데이터 업데이트 성공!');
       }
 
-      // 6. 새로운 서비스 함수를 호출하여 통합된 데이터를 저장
-      await WidgetService.saveAllCafeteriasWidgetData(widgetDataContainer);
       AnalyticsService.instance.logWidgetSync(
         schoolId: schoolId,
-        cafeteriaCount: allCafeteriasData.length,
+        cafeteriaCount: cafeteriaCount,
         result: WidgetSyncResult.success,
       );
     } catch (e) {
