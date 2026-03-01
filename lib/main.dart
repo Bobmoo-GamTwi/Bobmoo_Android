@@ -69,7 +69,28 @@ class BobMooApp extends StatelessWidget {
       FirebaseAnalyticsObserver(
         analytics: FirebaseAnalytics.instance,
         nameExtractor: (settings) {
-          switch (settings.name) {
+          final rawRouteName = settings.name;
+          final isWidgetCallbackRoute = () {
+            if (rawRouteName == null || rawRouteName.isEmpty) {
+              return true;
+            }
+            if (rawRouteName.startsWith('/CALLBACK')) {
+              return true;
+            }
+
+            final uri = Uri.tryParse(rawRouteName);
+            if ((uri?.path ?? '').toUpperCase().startsWith('/CALLBACK')) {
+              return true;
+            }
+
+            return rawRouteName.toUpperCase().contains(':/CALLBACK');
+          }();
+
+          final normalizedRouteName = isWidgetCallbackRoute
+              ? '/'
+              : rawRouteName;
+
+          switch (normalizedRouteName) {
             case '/':
               return 'app_gate_screen';
             case '/onboarding':
@@ -81,7 +102,7 @@ class BobMooApp extends StatelessWidget {
             case '/settings':
               return 'settings_screen';
             default:
-              return settings.name ?? 'unknown_screen';
+              return normalizedRouteName ?? 'unknown_screen';
           }
         },
       );
