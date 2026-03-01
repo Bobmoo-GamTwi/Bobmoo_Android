@@ -107,6 +107,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
                   final university = univs[index];
 
                   return ListTile(
+                    contentPadding: EdgeInsets.symmetric(horizontal: 3.w),
                     minTileHeight: 58.h,
                     trailing: _selectedUniv == university
                         ? Icon(Icons.check, size: 25.h)
@@ -126,8 +127,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
                   );
                 },
                 separatorBuilder: (context, index) => Divider(
-                  // TODO: 두께 들쭉날쭉 관련 논의
-                  thickness: 2.5,
+                  thickness: 1,
                   color: AppColors.colorGray5,
                 ),
               ),
