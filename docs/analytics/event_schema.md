@@ -3,11 +3,12 @@
 ## 1) 문서 메타
 
 - 문서 목적: BobMoo 앱의 Firebase Analytics 이벤트 수집 규칙과 이벤트 스키마를 표준화한다.
-- 문서 버전: `v0.4`
+- 문서 버전: `v0.5`
 - 작성일: `2026-03-01`
 - 오너: 밥묵자 안드로이드 개발팀
 - 상태: 초안 (Draft)
 - 변경 이력:
+  - `v0.5` (`2026-03-01`): `meal_api_request.request_type`에 `retry` 추가
   - `v0.4` (`2026-03-01`): `app_gate_decision` 파라미터명 `target_route` -> `destination_route`로 명확화
   - `v0.3` (`2026-03-01`): `env` 공용 파라미터(dev/prod) 추가, 앱 시작 시 default event parameter 설정 규칙 추가
   - `v0.2` (`2026-03-01`): `date_change` 확장(`change_source`, `days_delta`), 추가 이벤트 6종 보강, 중복 발화 가드 규칙 추가
@@ -81,7 +82,7 @@
 안드로이드 단일 플랫폼 운영 기준으로 `platform` 공통 파라미터는 현재 사용하지 않는다.
 멀티 플랫폼(iOS/Web) 확장 시 재도입을 검토한다.
 
-## 6) 이벤트 카탈로그 (v0.3)
+## 6) 이벤트 카탈로그 (v0.5)
 
 ### 6.1 `screen_view`
 
@@ -136,7 +137,7 @@
 - 파라미터
   - `school_id` (int, required)
   - `meal_date` (string, required)
-  - `request_type` (string, required) - `initial_load` / `user_pull_to_refresh` / `date_change`
+  - `request_type` (string, required) - `initial_load` / `retry` / `user_pull_to_refresh` / `date_change`
   - `change_source` (string, optional) - `request_type=date_change`일 때만, `swipe` / `picker`
   - `result` (string, required) - `success` / `network_error` / `stale_data` / `unknown_error`
 
