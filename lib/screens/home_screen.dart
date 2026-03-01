@@ -47,8 +47,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   double _horizontalDragOffset = 0;
   bool _isHorizontalDragging = false;
   int _dateTransitionDirection = 1; // 1: 다음날(왼쪽 스와이프), -1: 이전날
-  String _nextMealRequestType = 'initial_load';
-  String? _nextMealChangeSource;
+  MealApiRequestType _nextMealRequestType = MealApiRequestType.initialLoad;
+  AnalyticsChangeSource? _nextMealChangeSource;
   String? _lastEmptyStateKey;
   final Set<String> _loggedErrorStateKeys = <String>{};
 
@@ -135,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           mealDate: mealDate,
           requestType: requestContext.requestType,
           changeSource: requestContext.changeSource,
-          result: 'success',
+          result: MealApiResult.success,
         );
         AnalyticsService.instance.logViewMeal(
           schoolId: schoolId,
@@ -159,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             mealDate: mealDate,
             requestType: requestContext.requestType,
             changeSource: requestContext.changeSource,
-            result: 'stale_data',
+            result: MealApiResult.staleData,
           );
           AnalyticsService.instance.logViewMeal(
             schoolId: schoolId,
@@ -179,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             mealDate: mealDate,
             requestType: requestContext.requestType,
             changeSource: requestContext.changeSource,
-            result: 'network_error',
+            result: MealApiResult.networkError,
           );
         }
         // 네트워크 연결이 없는경우
@@ -191,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           mealDate: mealDate,
           requestType: requestContext.requestType,
           changeSource: requestContext.changeSource,
-          result: 'unknown_error',
+          result: MealApiResult.unknownError,
         );
       }
       // 다른 모든 에러는 FutureBuilder로 전달
@@ -205,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (_isWidgetUpdateInProgress) {
       AnalyticsService.instance.logWidgetSync(
         schoolId: schoolId,
-        result: 'skipped_in_progress',
+        result: WidgetSyncResult.skippedInProgress,
       );
       if (kDebugMode) {
         debugPrint('위젯 업데이트 스킵: 이전 작업 진행 중');
@@ -219,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             _widgetUpdateMinInterval) {
       AnalyticsService.instance.logWidgetSync(
         schoolId: schoolId,
-        result: 'skipped_debounce',
+        result: WidgetSyncResult.skippedDebounce,
       );
       if (kDebugMode) {
         debugPrint('위젯 업데이트 스킵: 너무 짧은 간격');
@@ -280,12 +280,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       AnalyticsService.instance.logWidgetSync(
         schoolId: schoolId,
         cafeteriaCount: allCafeteriasData.length,
-        result: 'success',
+        result: WidgetSyncResult.success,
       );
     } catch (e) {
       AnalyticsService.instance.logWidgetSync(
         schoolId: schoolId,
-        result: 'failure',
+        result: WidgetSyncResult.failure,
       );
       // 위젯 업데이트 실패는 조용히 무시
       if (kDebugMode) {
@@ -313,17 +313,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _setMealRequestContext({
-    required String requestType,
-    String? changeSource,
+    required MealApiRequestType requestType,
+    AnalyticsChangeSource? changeSource,
   }) {
     _nextMealRequestType = requestType;
     _nextMealChangeSource = changeSource;
   }
 
-  ({String requestType, String? changeSource}) _consumeMealRequestContext() {
+  ({MealApiRequestType requestType, AnalyticsChangeSource? changeSource})
+  _consumeMealRequestContext() {
     final requestType = _nextMealRequestType;
     final changeSource = _nextMealChangeSource;
-    _nextMealRequestType = 'initial_load';
+    _nextMealRequestType = MealApiRequestType.initialLoad;
     _nextMealChangeSource = null;
     return (requestType: requestType, changeSource: changeSource);
   }
@@ -333,15 +334,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _loggedErrorStateKeys.clear();
   }
 
-  String _errorTypeOf(Object error) {
-    if (error is NetworkException) return 'network_error';
-    return 'unknown_error';
+  AnalyticsErrorType _errorTypeOf(Object error) {
+    if (error is NetworkException) return AnalyticsErrorType.networkError;
+    return AnalyticsErrorType.unknownError;
   }
 
   void _logDateChangeIfNeeded({
     required DateTime previousDate,
     required DateTime nextDate,
-    required String changeSource,
+    required AnalyticsChangeSource changeSource,
   }) {
     if (_isSameDay(previousDate, nextDate)) return;
 
@@ -416,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _loadMeals() {
-    _setMealRequestContext(requestType: 'initial_load');
+    _setMealRequestContext(requestType: MealApiRequestType.initialLoad);
     setState(() {
       _mealFuture = _fetchData();
     });
@@ -426,13 +427,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final previousDate = _selectedDate;
     final nextDate = _selectedDate.add(Duration(days: days));
     _setMealRequestContext(
-      requestType: 'date_change',
-      changeSource: 'swipe',
+      requestType: MealApiRequestType.dateChange,
+      changeSource: AnalyticsChangeSource.swipe,
     );
     _logDateChangeIfNeeded(
       previousDate: previousDate,
       nextDate: nextDate,
-      changeSource: 'swipe',
+      changeSource: AnalyticsChangeSource.swipe,
     );
     _resetStateExposureGuards();
 
@@ -445,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   /// Pull-to-Refresh(당겨서 새로고침)을 위한 새로고침 함수
   Future<void> _refreshMeals() async {
-    _setMealRequestContext(requestType: 'user_pull_to_refresh');
+    _setMealRequestContext(requestType: MealApiRequestType.userPullToRefresh);
     final schoolId = _currentSchoolId;
     final mealDate = _toDateKey(_selectedDate);
 
@@ -458,8 +459,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               AnalyticsService.instance.logMealApiRequest(
                 schoolId: schoolId,
                 mealDate: mealDate,
-                requestType: 'user_pull_to_refresh',
-                result: 'success',
+                requestType: MealApiRequestType.userPullToRefresh,
+                result: MealApiResult.success,
               );
               AnalyticsService.instance.logViewMeal(
                 schoolId: schoolId,
@@ -480,8 +481,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   AnalyticsService.instance.logMealApiRequest(
                     schoolId: schoolId,
                     mealDate: mealDate,
-                    requestType: 'user_pull_to_refresh',
-                    result: 'stale_data',
+                    requestType: MealApiRequestType.userPullToRefresh,
+                    result: MealApiResult.staleData,
                   );
                   AnalyticsService.instance.logViewMeal(
                     schoolId: schoolId,
@@ -504,8 +505,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 AnalyticsService.instance.logMealApiRequest(
                   schoolId: schoolId,
                   mealDate: mealDate,
-                  requestType: 'user_pull_to_refresh',
-                  result: 'network_error',
+                  requestType: MealApiRequestType.userPullToRefresh,
+                  result: MealApiResult.networkError,
                 );
               }
               // 3b. 로컬 데이터조차 없으면 에러 화면을 보여줍니다.
@@ -516,8 +517,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               AnalyticsService.instance.logMealApiRequest(
                 schoolId: schoolId,
                 mealDate: mealDate,
-                requestType: 'user_pull_to_refresh',
-                result: 'unknown_error',
+                requestType: MealApiRequestType.userPullToRefresh,
+                result: MealApiResult.unknownError,
               );
             }
             throw NetworkException();
@@ -536,13 +537,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (picked != null && picked != _selectedDate) {
       final previousDate = _selectedDate;
       _setMealRequestContext(
-        requestType: 'date_change',
-        changeSource: 'picker',
+        requestType: MealApiRequestType.dateChange,
+        changeSource: AnalyticsChangeSource.picker,
       );
       _logDateChangeIfNeeded(
         previousDate: previousDate,
         nextDate: picked,
-        changeSource: 'picker',
+        changeSource: AnalyticsChangeSource.picker,
       );
       _resetStateExposureGuards();
 

@@ -40,12 +40,14 @@ class _AppGateState extends State<AppGate> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      final targetRoute = (univProvider.selectedUniversity != null)
-          ? "/home"
-          : "/onboarding";
+      final hasSelectedSchool = univProvider.selectedUniversity != null;
+      final targetRoute = hasSelectedSchool ? "/home" : "/onboarding";
+      final analyticsDestinationRoute = hasSelectedSchool
+          ? AppGateDestinationRoute.home
+          : AppGateDestinationRoute.onboarding;
       AnalyticsService.instance.logAppGateDecision(
-        targetRoute: targetRoute,
-        hasSelectedSchool: univProvider.selectedUniversity != null,
+        destinationRoute: analyticsDestinationRoute,
+        hasSelectedSchool: hasSelectedSchool,
       );
 
       Navigator.of(

@@ -28,7 +28,15 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
   University? _selectedUniv;
   University? _initialSelectedUniv;
 
-  String get _entryPoint => widget.entryPoint;
+  AnalyticsEntryPoint get _entryPoint {
+    switch (widget.entryPoint) {
+      case 'settings':
+        return AnalyticsEntryPoint.settings;
+      case 'onboarding':
+      default:
+        return AnalyticsEntryPoint.onboarding;
+    }
+  }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(

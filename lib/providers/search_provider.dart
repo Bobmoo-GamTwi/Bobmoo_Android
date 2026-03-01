@@ -20,13 +20,13 @@ class SearchProvider extends ChangeNotifier {
     try {
       _allItems = await _loadUniversities();
       AnalyticsService.instance.logSchoolListLoadResult(
-        result: 'success',
+        result: SchoolListLoadResult.success,
         schoolCount: _allItems.length,
         loadTimeMs: stopwatch.elapsedMilliseconds,
       );
     } catch (error) {
       AnalyticsService.instance.logSchoolListLoadResult(
-        result: 'failure',
+        result: SchoolListLoadResult.failure,
         loadTimeMs: stopwatch.elapsedMilliseconds,
       );
       rethrow;
