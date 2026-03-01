@@ -41,6 +41,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// 선택한 날짜 저장할 상태 변수
   DateTime _selectedDate = DateTime.now();
 
+  static const double _swipeTriggerDistance = 80;
+  static const double _maxVisualDragOffset = 90;
+
+  double _horizontalDragOffset = 0;
+  bool _isHorizontalDragging = false;
+  int _dateTransitionDirection = 1; // 1: 다음날(왼쪽 스와이프), -1: 이전날
+
   /// 화면이 처음 나타날 때 데이터 불러오기
   @override
   void initState() {
@@ -243,6 +250,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
+  void _changeSelectedDateByDays(int days) {
+    setState(() {
+      _dateTransitionDirection = days >= 0 ? 1 : -1;
+      _selectedDate = _selectedDate.add(Duration(days: days));
+      _mealFuture = _fetchData();
+    });
+  }
+
   /// Pull-to-Refresh(당겨서 새로고침)을 위한 새로고침 함수
   Future<void> _refreshMeals() async {
     setState(() {
@@ -280,8 +295,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       lastDate: DateTime(2030),
     );
     if (picked != null && picked != _selectedDate) {
-      _selectedDate = picked;
-      _loadMeals(); // 새 날짜로 데이터 로드
+      setState(() {
+        _dateTransitionDirection = picked.isAfter(_selectedDate) ? 1 : -1;
+        _selectedDate = picked;
+        _mealFuture = _fetchData();
+      });
     }
   }
 
@@ -498,53 +516,125 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return FutureBuilder<List<Meal>>(
       future: _mealFuture,
       builder: (context, snapshot) {
-        return CustomScrollView(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          slivers: [
-            CupertinoSliverRefreshControl(
-              onRefresh: _refreshMeals,
-              builder:
-                  (
-                    context,
-                    refreshState,
-                    pulledExtent,
-                    refreshTriggerPullDistance,
-                    refreshIndicatorExtent,
-                  ) {
-                    return Container(
-                      margin: const EdgeInsets.all(20),
-                      padding: EdgeInsets.all(33.h),
-                      child: CupertinoActivityIndicator(
-                        radius: 10.r,
-                      ),
-                    );
-                  },
+        final currentDateKey = DateFormat('yyyy-MM-dd').format(_selectedDate);
+        final beginX = _dateTransitionDirection >= 0 ? 0.22 : -0.22;
+
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onHorizontalDragStart: (_) {
+            setState(() {
+              _isHorizontalDragging = true;
+            });
+          },
+          onHorizontalDragUpdate: (details) {
+            setState(() {
+              _horizontalDragOffset = (_horizontalDragOffset + details.delta.dx)
+                  .clamp(-_maxVisualDragOffset, _maxVisualDragOffset);
+            });
+          },
+          onHorizontalDragCancel: () {
+            setState(() {
+              _isHorizontalDragging = false;
+              _horizontalDragOffset = 0;
+            });
+          },
+          onHorizontalDragEnd: (_) {
+            final dragOffset = _horizontalDragOffset;
+            int? dayDelta;
+
+            if (dragOffset.abs() >= _swipeTriggerDistance) {
+              dayDelta = dragOffset < 0 ? 1 : -1; // 왼쪽 스와이프=다음 날
+            }
+
+            setState(() {
+              _isHorizontalDragging = false;
+              _horizontalDragOffset = 0;
+            });
+
+            if (dayDelta != null) {
+              _changeSelectedDateByDays(dayDelta);
+            }
+          },
+          child: AnimatedContainer(
+            duration: _isHorizontalDragging
+                ? Duration.zero
+                : const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            transform: Matrix4.translationValues(_horizontalDragOffset, 0, 0),
+            child: ClipRect(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeOutCubic,
+                transitionBuilder: (child, animation) {
+                  final isIncoming = child.key == ValueKey(currentDateKey);
+                  final slide = isIncoming
+                      ? Tween<Offset>(
+                          begin: Offset(beginX, 0),
+                          end: Offset.zero,
+                        ).animate(animation)
+                      : Tween<Offset>(
+                          begin: Offset.zero,
+                          end: Offset(-beginX, 0),
+                        ).animate(ReverseAnimation(animation));
+
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(position: slide, child: child),
+                  );
+                },
+                child: CustomScrollView(
+                  key: ValueKey(currentDateKey),
+                  physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+                  slivers: [
+                    CupertinoSliverRefreshControl(
+                      onRefresh: _refreshMeals,
+                      builder:
+                          (
+                            context,
+                            refreshState,
+                            pulledExtent,
+                            refreshTriggerPullDistance,
+                            refreshIndicatorExtent,
+                          ) {
+                            return Container(
+                              margin: const EdgeInsets.all(20),
+                              padding: EdgeInsets.all(33.h),
+                              child: CupertinoActivityIndicator(
+                                radius: 10.r,
+                              ),
+                            );
+                          },
+                    ),
+                    // 케이스별로 다른 Sliver 추가
+                    // 로딩 중
+                    if (snapshot.connectionState == ConnectionState.waiting)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: const Center(child: CircularProgressIndicator()),
+                      )
+                    // 에러 발생
+                    else if (snapshot.hasError)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _buildErrorWidget(snapshot.error!),
+                      )
+                    // 데이터 없을 시 비어있음 표시
+                    else if (!snapshot.hasData || snapshot.data!.isEmpty)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _buildEmptyState(),
+                      )
+                    // 데이터 로딩 성공 -> MealList 위젯 생성
+                    else
+                      _buildMealList(snapshot.data!), // Sliver 직접 추가
+                  ],
+                ),
+              ),
             ),
-            // 케이스별로 다른 Sliver 추가
-            // 로딩 중
-            if (snapshot.connectionState == ConnectionState.waiting)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: const Center(child: CircularProgressIndicator()),
-              )
-            // 에러 발생
-            else if (snapshot.hasError)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _buildErrorWidget(snapshot.error!),
-              )
-            // 데이터 없을 시 비어있음 표시
-            else if (!snapshot.hasData || snapshot.data!.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _buildEmptyState(),
-              )
-            // 데이터 로딩 성공 -> MealList 위젯 생성
-            else
-              _buildMealList(snapshot.data!), // Sliver 직접 추가
-          ],
+          ),
         );
       },
     );
@@ -588,7 +678,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 padding: EdgeInsets.symmetric(
                   horizontal: 12.w,
-                  vertical: 1.h,
+                  vertical: 3.h,
                 ),
                 minimumSize: Size.zero, // 최소 사이즈 제거
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap, // 탭 영역을 최소화

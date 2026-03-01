@@ -1,5 +1,6 @@
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/search_provider.dart';
+import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/ui/components/buttons/primary_button.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/ui/theme/app_shadow.dart';
@@ -40,6 +41,12 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
       ),
       toolbarHeight: 98.h,
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedUniv = context.read<UnivProvider>().selectedUniversity;
   }
 
   @override
@@ -107,6 +114,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
                   final university = univs[index];
 
                   return ListTile(
+                    contentPadding: EdgeInsets.symmetric(horizontal: 3.w),
                     minTileHeight: 58.h,
                     trailing: _selectedUniv == university
                         ? Icon(Icons.check, size: 25.h)
@@ -126,8 +134,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
                   );
                 },
                 separatorBuilder: (context, index) => Divider(
-                  // TODO: 두께 들쭉날쭉 관련 논의
-                  thickness: 2.5,
+                  thickness: 1,
                   color: AppColors.colorGray5,
                 ),
               ),
