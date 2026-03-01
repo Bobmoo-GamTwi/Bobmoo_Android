@@ -337,6 +337,20 @@ class AnalyticsService {
       },
     );
   }
+
+  Future<void> setSelectedSchoolUserProperty(int? schoolId) async {
+    try {
+      await _analytics.setUserProperty(
+        name: 'selected_school_id',
+        value: schoolId?.toString(),
+      );
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[Analytics] setUserProperty failed: $error');
+      }
+    }
+  }
+
   void _logEvent({
     required String name,
     required Map<String, Object?> parameters,

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/models/university.dart';
+import 'package:bobmoo/services/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,6 +37,10 @@ class UnivProvider extends ChangeNotifier {
       }
     }
 
+    await AnalyticsService.instance.setSelectedSchoolUserProperty(
+      _selectedUniversity?.schoolId,
+    );
+
     _isInitialized = true;
     notifyListeners();
   }
@@ -56,6 +61,10 @@ class UnivProvider extends ChangeNotifier {
     } else {
       await prefs.remove('selectedUniv');
     }
+
+    await AnalyticsService.instance.setSelectedSchoolUserProperty(
+      _selectedUniversity?.schoolId,
+    );
 
     notifyListeners();
   }
