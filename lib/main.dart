@@ -10,6 +10,7 @@ import 'package:bobmoo/screens/onboarding_screen.dart';
 import 'package:bobmoo/screens/select_school_screen.dart';
 import 'package:bobmoo/screens/settings_screen.dart';
 import 'package:bobmoo/services/background_service.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -63,6 +64,27 @@ void main() async {
 
 class BobMooApp extends StatelessWidget {
   const BobMooApp({super.key});
+
+  static final FirebaseAnalyticsObserver _analyticsObserver =
+      FirebaseAnalyticsObserver(
+        analytics: FirebaseAnalytics.instance,
+        nameExtractor: (settings) {
+          switch (settings.name) {
+            case '/':
+              return 'app_gate_screen';
+            case '/onboarding':
+              return 'onboarding_screen';
+            case '/select_school':
+              return 'select_school_screen';
+            case '/home':
+              return 'home_screen';
+            case '/settings':
+              return 'settings_screen';
+            default:
+              return settings.name ?? 'unknown_screen';
+          }
+        },
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -173,6 +195,7 @@ class BobMooApp extends StatelessWidget {
           },
           title: '밥묵자',
           theme: _getThemeData(),
+          navigatorObservers: [_analyticsObserver],
           locale: const Locale('ko', 'KR'), // 앱의 기본 언어를 한국어로 설정
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
