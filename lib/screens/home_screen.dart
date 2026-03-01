@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   DateTime _selectedDate = DateTime.now();
 
   static const double _swipeTriggerDistance = 80;
-  static const double _maxVisualDragOffset = 110;
+  static const double _maxVisualDragOffset = 90;
 
   double _horizontalDragOffset = 0;
   bool _isHorizontalDragging = false;
@@ -678,7 +678,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 padding: EdgeInsets.symmetric(
                   horizontal: 12.w,
-                  vertical: 1.h,
+                  vertical: 3.h,
                 ),
                 minimumSize: Size.zero, // 최소 사이즈 제거
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap, // 탭 영역을 최소화
