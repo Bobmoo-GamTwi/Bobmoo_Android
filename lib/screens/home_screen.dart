@@ -9,6 +9,7 @@ import 'package:bobmoo/models/menu_model.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/repositories/meal_repository.dart';
 import 'package:bobmoo/models/meal_widget_data.dart';
+import 'package:bobmoo/screens/home_analytics_helper.dart';
 import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/services/widget_service.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
@@ -47,10 +48,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   double _horizontalDragOffset = 0;
   bool _isHorizontalDragging = false;
   int _dateTransitionDirection = 1; // 1: 다음날(왼쪽 스와이프), -1: 이전날
-  MealApiRequestType _nextMealRequestType = MealApiRequestType.initialLoad;
-  AnalyticsChangeSource? _nextMealChangeSource;
-  String? _lastEmptyStateKey;
-  final Set<String> _loggedErrorStateKeys = <String>{};
+  final HomeAnalyticsHelper _analyticsHelper = HomeAnalyticsHelper();
 
   /// 화면이 처음 나타날 때 데이터 불러오기
   @override
@@ -122,8 +120,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   ///
   /// Repository에게 식단 데이터를 요청한다.
   Future<List<Meal>> _fetchData() async {
-    final requestContext = _consumeMealRequestContext();
-    final mealDate = _toDateKey(_selectedDate);
+    final requestContext = _analyticsHelper.consumeMealRequestContext();
+    final mealDate = _analyticsHelper.toDateKey(_selectedDate);
     final schoolId = _currentSchoolId;
 
     try {
@@ -140,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         AnalyticsService.instance.logViewMeal(
           schoolId: schoolId,
           mealDate: mealDate,
-          dateOffset: _dateOffsetFromToday(_selectedDate),
+          dateOffset: _analyticsHelper.dateOffsetFromToday(_selectedDate),
           mealCount: meals.length,
         );
       }
@@ -164,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           AnalyticsService.instance.logViewMeal(
             schoolId: schoolId,
             mealDate: mealDate,
-            dateOffset: _dateOffsetFromToday(_selectedDate),
+            dateOffset: _analyticsHelper.dateOffsetFromToday(_selectedDate),
             mealCount: e.staleData.length,
           );
         }
@@ -303,100 +301,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int? get _currentSchoolId =>
       context.read<UnivProvider>().selectedUniversity?.schoolId;
 
-  String _toDateKey(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
-
-  int _dateOffsetFromToday(DateTime date) {
-    final today = DateTime.now();
-    final onlyDate = DateTime(date.year, date.month, date.day);
-    final onlyToday = DateTime(today.year, today.month, today.day);
-    return onlyDate.difference(onlyToday).inDays;
-  }
-
-  void _setMealRequestContext({
-    required MealApiRequestType requestType,
-    AnalyticsChangeSource? changeSource,
-  }) {
-    _nextMealRequestType = requestType;
-    _nextMealChangeSource = changeSource;
-  }
-
-  ({MealApiRequestType requestType, AnalyticsChangeSource? changeSource})
-  _consumeMealRequestContext() {
-    final requestType = _nextMealRequestType;
-    final changeSource = _nextMealChangeSource;
-    _nextMealRequestType = MealApiRequestType.initialLoad;
-    _nextMealChangeSource = null;
-    return (requestType: requestType, changeSource: changeSource);
-  }
-
-  void _resetStateExposureGuards() {
-    _lastEmptyStateKey = null;
-    _loggedErrorStateKeys.clear();
-  }
-
-  AnalyticsErrorType _errorTypeOf(Object error) {
-    if (error is NetworkException) return AnalyticsErrorType.networkError;
-    return AnalyticsErrorType.unknownError;
-  }
-
-  void _logDateChangeIfNeeded({
-    required DateTime previousDate,
-    required DateTime nextDate,
-    required AnalyticsChangeSource changeSource,
-  }) {
-    if (_isSameDay(previousDate, nextDate)) return;
-
-    final schoolId = _currentSchoolId;
-    if (schoolId == null) return;
-
-    AnalyticsService.instance.logDateChange(
-      schoolId: schoolId,
-      previousDate: _toDateKey(previousDate),
-      mealDate: _toDateKey(nextDate),
-      dateOffset: _dateOffsetFromToday(nextDate),
-      changeSource: changeSource,
-      daysDelta: DateTime(
-        nextDate.year,
-        nextDate.month,
-        nextDate.day,
-      ).difference(DateTime(previousDate.year, previousDate.month, previousDate.day)).inDays,
-    );
-  }
-
-  void _logEmptyStateIfNeeded() {
-    final schoolId = _currentSchoolId;
-    if (schoolId == null) return;
-
-    final mealDate = _toDateKey(_selectedDate);
-    final contextKey = '$schoolId|$mealDate';
-    if (_lastEmptyStateKey == contextKey) return;
-
-    _lastEmptyStateKey = contextKey;
-    AnalyticsService.instance.logMealEmptyStateView(
-      schoolId: schoolId,
-      mealDate: mealDate,
-      dateOffset: _dateOffsetFromToday(_selectedDate),
-    );
-  }
-
-  void _logErrorStateIfNeeded(Object error) {
-    final schoolId = _currentSchoolId;
-    if (schoolId == null) return;
-
-    final mealDate = _toDateKey(_selectedDate);
-    final errorType = _errorTypeOf(error);
-    final contextKey = '$schoolId|$mealDate|$errorType';
-    if (_loggedErrorStateKeys.contains(contextKey)) return;
-
-    _loggedErrorStateKeys.add(contextKey);
-    AnalyticsService.instance.logMealErrorStateView(
-      schoolId: schoolId,
-      mealDate: mealDate,
-      dateOffset: _dateOffsetFromToday(_selectedDate),
-      errorType: errorType,
-    );
-  }
-
   /// StaleDataException 발생 시 SnackBar를 띄우는 헬퍼 함수
   void _showStaleDataSnackbar(StaleDataException e) {
     // SnackBar는 build가 완료된 후에 띄워야 하므로 addPostFrameCallback 사용
@@ -417,7 +321,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _loadMeals() {
-    _setMealRequestContext(requestType: MealApiRequestType.initialLoad);
+    _analyticsHelper.setMealRequestContext(
+      requestType: MealApiRequestType.initialLoad,
+    );
     setState(() {
       _mealFuture = _fetchData();
     });
@@ -426,16 +332,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void _changeSelectedDateByDays(int days) {
     final previousDate = _selectedDate;
     final nextDate = _selectedDate.add(Duration(days: days));
-    _setMealRequestContext(
+    _analyticsHelper.setMealRequestContext(
       requestType: MealApiRequestType.dateChange,
       changeSource: AnalyticsChangeSource.swipe,
     );
-    _logDateChangeIfNeeded(
+    _analyticsHelper.logDateChangeIfNeeded(
+      schoolId: _currentSchoolId,
       previousDate: previousDate,
       nextDate: nextDate,
       changeSource: AnalyticsChangeSource.swipe,
     );
-    _resetStateExposureGuards();
+    _analyticsHelper.resetStateExposureGuards();
 
     setState(() {
       _dateTransitionDirection = days >= 0 ? 1 : -1;
@@ -446,9 +353,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   /// Pull-to-Refresh(당겨서 새로고침)을 위한 새로고침 함수
   Future<void> _refreshMeals() async {
-    _setMealRequestContext(requestType: MealApiRequestType.userPullToRefresh);
+    _analyticsHelper.setMealRequestContext(
+      requestType: MealApiRequestType.userPullToRefresh,
+    );
     final schoolId = _currentSchoolId;
-    final mealDate = _toDateKey(_selectedDate);
+    final mealDate = _analyticsHelper.toDateKey(_selectedDate);
 
     setState(() {
       // catchError 내부를 async로 만들어 await를 사용할 수 있게 합니다.
@@ -465,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               AnalyticsService.instance.logViewMeal(
                 schoolId: schoolId,
                 mealDate: mealDate,
-                dateOffset: _dateOffsetFromToday(_selectedDate),
+                dateOffset: _analyticsHelper.dateOffsetFromToday(_selectedDate),
                 mealCount: meals.length,
               );
             }
@@ -487,7 +396,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   AnalyticsService.instance.logViewMeal(
                     schoolId: schoolId,
                     mealDate: mealDate,
-                    dateOffset: _dateOffsetFromToday(_selectedDate),
+                    dateOffset: _analyticsHelper.dateOffsetFromToday(_selectedDate),
                     mealCount: localData.length,
                   );
                 }
@@ -536,16 +445,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
     if (picked != null && picked != _selectedDate) {
       final previousDate = _selectedDate;
-      _setMealRequestContext(
+      _analyticsHelper.setMealRequestContext(
         requestType: MealApiRequestType.dateChange,
         changeSource: AnalyticsChangeSource.picker,
       );
-      _logDateChangeIfNeeded(
+      _analyticsHelper.logDateChangeIfNeeded(
+        schoolId: _currentSchoolId,
         previousDate: previousDate,
         nextDate: picked,
         changeSource: AnalyticsChangeSource.picker,
       );
-      _resetStateExposureGuards();
+      _analyticsHelper.resetStateExposureGuards();
 
       setState(() {
         _dateTransitionDirection = picked.isAfter(_selectedDate) ? 1 : -1;
@@ -660,8 +570,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               if (schoolId != null) {
                 AnalyticsService.instance.logMealRetryTap(
                   schoolId: schoolId,
-                  mealDate: _toDateKey(_selectedDate),
-                  previousErrorType: _errorTypeOf(error),
+                  mealDate: _analyticsHelper.toDateKey(_selectedDate),
+                  previousErrorType: _analyticsHelper.errorTypeOf(error),
                 );
               }
               _loadMeals();
@@ -878,7 +788,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     // 에러 발생
                     else if (snapshot.hasError)
                       () {
-                        _logErrorStateIfNeeded(snapshot.error!);
+                        _analyticsHelper.logErrorStateIfNeeded(
+                          schoolId: _currentSchoolId,
+                          selectedDate: _selectedDate,
+                          error: snapshot.error!,
+                        );
                         return SliverFillRemaining(
                           hasScrollBody: false,
                           child: _buildErrorWidget(snapshot.error!),
@@ -887,7 +801,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     // 데이터 없을 시 비어있음 표시
                     else if (!snapshot.hasData || snapshot.data!.isEmpty)
                       () {
-                        _logEmptyStateIfNeeded();
+                        _analyticsHelper.logEmptyStateIfNeeded(
+                          schoolId: _currentSchoolId,
+                          selectedDate: _selectedDate,
+                        );
                         return SliverFillRemaining(
                           hasScrollBody: false,
                           child: _buildEmptyState(),
