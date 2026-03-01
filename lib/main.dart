@@ -160,11 +160,21 @@ class BobMooApp extends StatelessWidget {
 
               // 학교 선택 화면 라우트
               case "/select_school":
-                // 여기만 “반환 타입”을 명시
-                final bool allowBack = settings.arguments as bool;
+                final args = settings.arguments;
+                bool allowBack = false;
+                String entryPoint = 'onboarding';
+
+                if (args is Map<String, dynamic>) {
+                  allowBack = args['allowBack'] as bool? ?? false;
+                  entryPoint = args['entryPoint'] as String? ?? 'onboarding';
+                }
+
                 return MaterialPageRoute<University?>(
                   settings: settings,
-                  builder: (_) => SelectSchoolScreen(allowBack: allowBack),
+                  builder: (_) => SelectSchoolScreen(
+                    allowBack: allowBack,
+                    entryPoint: entryPoint,
+                  ),
                 );
 
               // 홈화면 라우트

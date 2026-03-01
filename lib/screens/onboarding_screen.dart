@@ -69,7 +69,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _openSelectSchool() async {
     final University? university = await Navigator.of(
       context,
-    ).pushNamed<University?>("/select_school", arguments: false);
+    ).pushNamed<University?>(
+      "/select_school",
+      arguments: {'allowBack': false, 'entryPoint': 'onboarding'},
+    );
 
     if (!mounted) return;
 

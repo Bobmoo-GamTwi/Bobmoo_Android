@@ -1,5 +1,6 @@
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/search_provider.dart';
+import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/ui/components/buttons/primary_button.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
@@ -11,10 +12,12 @@ import 'package:provider/provider.dart';
 
 class SelectSchoolScreen extends StatefulWidget {
   final bool allowBack;
+  final String entryPoint;
 
   const SelectSchoolScreen({
     super.key,
     required this.allowBack,
+    required this.entryPoint,
   });
 
   @override
@@ -23,13 +26,16 @@ class SelectSchoolScreen extends StatefulWidget {
 
 class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
   University? _selectedUniv;
+  University? _initialSelectedUniv;
+
+  String get _entryPoint => widget.entryPoint;
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       // Appbar의 기본 여백 제거
       titleSpacing: 0,
       backgroundColor: AppColors.colorGray4,
-      // 온보딩화면 -> false, 설정화면 -> true
+      // 뒤로가기 허용 여부는 라우트 인자로 제어
       automaticallyImplyLeading: widget.allowBack,
       scrolledUnderElevation: 0,
       title: Padding(
@@ -47,6 +53,7 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
   void initState() {
     super.initState();
     _selectedUniv = context.read<UnivProvider>().selectedUniversity;
+    _initialSelectedUniv = _selectedUniv;
   }
 
   @override
@@ -72,7 +79,25 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
                 PrimaryButton(
                   text: "선택완료",
                   onTap: () {
-                    Navigator.of(context).pop(_selectedUniv);
+                    final selectedUniv = _selectedUniv;
+                    if (selectedUniv == null) return;
+
+                    final previousUniv = _initialSelectedUniv;
+                    if (previousUniv == null) {
+                      AnalyticsService.instance.logSelectSchool(
+                        schoolId: selectedUniv.schoolId,
+                        entryPoint: _entryPoint,
+                        isFirstSelect: true,
+                      );
+                    } else if (previousUniv.schoolId != selectedUniv.schoolId) {
+                      AnalyticsService.instance.logChangeSchool(
+                        previousSchoolId: previousUniv.schoolId,
+                        newSchoolId: selectedUniv.schoolId,
+                        entryPoint: _entryPoint,
+                      );
+                    }
+
+                    Navigator.of(context).pop(selectedUniv);
                   },
                 ),
                 SizedBox(height: 27.h),
@@ -125,10 +150,19 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
                       style: AppTypography.search.b17,
                     ),
                     onTap: () {
+                      final nextUniv = _selectedUniv == university
+                          ? null
+                          : university;
+                      if (nextUniv != null) {
+                        AnalyticsService.instance.logSchoolSearchResultTap(
+                          schoolId: nextUniv.schoolId,
+                          resultRank: index + 1,
+                          entryPoint: _entryPoint,
+                        );
+                      }
+
                       setState(() {
-                        _selectedUniv = _selectedUniv == university
-                            ? null
-                            : university;
+                        _selectedUniv = nextUniv;
                       });
                     },
                   );
