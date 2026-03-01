@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 enum AppGateDestinationRoute {
   home('/home'),
@@ -97,7 +98,18 @@ class AnalyticsService {
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
   bool _isInitialized = false;
 
-  String get environment => kReleaseMode ? 'prod' : 'dev';
+  String get environment {
+    switch (appFlavor) {
+      case 'prod':
+        return 'prod';
+      case 'staging':
+        return 'staging';
+      case 'dev':
+        return 'dev';
+      default:
+        return kReleaseMode ? 'prod' : 'dev';
+    }
+  }
 
   Future<void> initialize() async {
     if (_isInitialized) return;
