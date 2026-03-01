@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:description="@string/meal_widget_description"
+    android:description="@string/single_cafeteria_widget_description_3x2"
     android:initialLayout="@layout/glance_default_preview"
     android:minWidth="180dp"
     android:minHeight="110dp"
