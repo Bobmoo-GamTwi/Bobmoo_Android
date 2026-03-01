@@ -39,6 +39,7 @@ Future<void> setupLocator() async {
     () => MealRepository(
       isar: locator<Isar>(),
       menuService: locator<MenuService>(),
+      prefs: locator<SharedPreferences>(),
     ),
   );
 }

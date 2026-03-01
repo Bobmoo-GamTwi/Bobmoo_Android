@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:bobmoo/collections/meal_collection.dart';
 import 'package:bobmoo/collections/menu_cache_status.dart';
 import 'package:bobmoo/collections/restaurant_collection.dart';
@@ -6,6 +8,7 @@ import 'package:bobmoo/services/menu_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:isar_community/isar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // --- Custom Exceptions ---
 /// 네트워크 오류를 위한 Exception
@@ -48,10 +51,13 @@ class MealFetchResult {
 class MealRepository {
   final Isar isar;
   final MenuService menuService;
+  final SharedPreferences prefs;
+  static const String _fallbackSchoolNameK = '인하대학교';
 
   MealRepository({
     required this.isar,
     required this.menuService,
+    required this.prefs,
   });
 
   /// 핵심 함수: 특정 날짜의 식단 데이터를 가져옴
@@ -132,14 +138,42 @@ class MealRepository {
   }
 
   Future<List<Meal>> _fetchFromApiAndSave(DateTime date) async {
+    final schoolNameK = _resolveSchoolNameK();
+
     // 1. API에서 데이터 가져오기
-    final menuResponse = await menuService.getMenu(date);
+    final menuResponse = await menuService.getMenu(
+      date,
+      schoolNameK: schoolNameK,
+    );
 
     // 2. DB에 저장
     await _saveMenuResponseToDb(menuResponse);
 
     // 3. DB에 저장된 데이터를 다시 조회하여 반환
     return fetchFromDb(date);
+  }
+
+  String _resolveSchoolNameK() {
+    try {
+      final jsonString = prefs.getString('selectedUniv');
+      if (jsonString == null || jsonString.isEmpty) {
+        return _fallbackSchoolNameK;
+      }
+
+      final decoded = jsonDecode(jsonString);
+      if (decoded is! Map<String, dynamic>) {
+        return _fallbackSchoolNameK;
+      }
+
+      final schoolNameK = decoded['schoolNameK'];
+      if (schoolNameK is String && schoolNameK.isNotEmpty) {
+        return schoolNameK;
+      }
+    } catch (_) {
+      // 파싱 실패 시에는 기본 학교로 폴백하여 API 호출 실패를 방지합니다.
+    }
+
+    return _fallbackSchoolNameK;
   }
 
   /// response 응답을 DB에 추가
