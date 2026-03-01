@@ -9,6 +9,7 @@ import 'package:bobmoo/models/menu_model.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/repositories/meal_repository.dart';
 import 'package:bobmoo/models/meal_widget_data.dart';
+import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/services/widget_service.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/utils/meal_utils.dart';
@@ -46,6 +47,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   double _horizontalDragOffset = 0;
   bool _isHorizontalDragging = false;
   int _dateTransitionDirection = 1; // 1: 다음날(왼쪽 스와이프), -1: 이전날
+  String _nextMealRequestType = 'initial_load';
+  String? _nextMealChangeSource;
+  String? _lastEmptyStateKey;
+  final Set<String> _loggedErrorStateKeys = <String>{};
 
   /// 화면이 처음 나타날 때 데이터 불러오기
   @override
@@ -117,8 +122,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   ///
   /// Repository에게 식단 데이터를 요청한다.
   Future<List<Meal>> _fetchData() async {
+    final requestContext = _consumeMealRequestContext();
+    final mealDate = _toDateKey(_selectedDate);
+    final schoolId = _currentSchoolId;
+
     try {
       final meals = await _repository.getMealsForDate(_selectedDate);
+
+      if (schoolId != null) {
+        AnalyticsService.instance.logMealApiRequest(
+          schoolId: schoolId,
+          mealDate: mealDate,
+          requestType: requestContext.requestType,
+          changeSource: requestContext.changeSource,
+          result: 'success',
+        );
+        AnalyticsService.instance.logViewMeal(
+          schoolId: schoolId,
+          mealDate: mealDate,
+          dateOffset: _dateOffsetFromToday(_selectedDate),
+          mealCount: meals.length,
+        );
+      }
 
       // 위젯은 "오늘" 데이터만 사용합니다. 오늘 데이터가 있으면 재조회 없이 재사용합니다.
       _updateWidgetOnly(
@@ -128,13 +153,46 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       return meals;
     } catch (e) {
       if (e is StaleDataException) {
+        if (schoolId != null) {
+          AnalyticsService.instance.logMealApiRequest(
+            schoolId: schoolId,
+            mealDate: mealDate,
+            requestType: requestContext.requestType,
+            changeSource: requestContext.changeSource,
+            result: 'stale_data',
+          );
+          AnalyticsService.instance.logViewMeal(
+            schoolId: schoolId,
+            mealDate: mealDate,
+            dateOffset: _dateOffsetFromToday(_selectedDate),
+            mealCount: e.staleData.length,
+          );
+        }
         // 신선도가 떨어진 데이터를 취급하는 경우
         _showStaleDataSnackbar(e);
         // 데이터를 반환하여 화면은 정상적으로 그리도록 함
         return e.staleData;
       } else if (e is SocketException) {
+        if (schoolId != null) {
+          AnalyticsService.instance.logMealApiRequest(
+            schoolId: schoolId,
+            mealDate: mealDate,
+            requestType: requestContext.requestType,
+            changeSource: requestContext.changeSource,
+            result: 'network_error',
+          );
+        }
         // 네트워크 연결이 없는경우
         throw NetworkException();
+      }
+      if (schoolId != null) {
+        AnalyticsService.instance.logMealApiRequest(
+          schoolId: schoolId,
+          mealDate: mealDate,
+          requestType: requestContext.requestType,
+          changeSource: requestContext.changeSource,
+          result: 'unknown_error',
+        );
       }
       // 다른 모든 에러는 FutureBuilder로 전달
       rethrow;
@@ -143,7 +201,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   /// 위젯 데이터 업데이트 함수 (오늘날짜)
   Future<void> _updateWidgetOnly({List<Meal>? todayMeals}) async {
+    final schoolId = _currentSchoolId;
     if (_isWidgetUpdateInProgress) {
+      AnalyticsService.instance.logWidgetSync(
+        schoolId: schoolId,
+        result: 'skipped_in_progress',
+      );
       if (kDebugMode) {
         debugPrint('위젯 업데이트 스킵: 이전 작업 진행 중');
       }
@@ -154,6 +217,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (_lastWidgetUpdateAt != null &&
         nowForDebounce.difference(_lastWidgetUpdateAt!) <
             _widgetUpdateMinInterval) {
+      AnalyticsService.instance.logWidgetSync(
+        schoolId: schoolId,
+        result: 'skipped_debounce',
+      );
       if (kDebugMode) {
         debugPrint('위젯 업데이트 스킵: 너무 짧은 간격');
       }
@@ -210,7 +277,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
       // 6. 새로운 서비스 함수를 호출하여 통합된 데이터를 저장
       await WidgetService.saveAllCafeteriasWidgetData(widgetDataContainer);
+      AnalyticsService.instance.logWidgetSync(
+        schoolId: schoolId,
+        cafeteriaCount: allCafeteriasData.length,
+        result: 'success',
+      );
     } catch (e) {
+      AnalyticsService.instance.logWidgetSync(
+        schoolId: schoolId,
+        result: 'failure',
+      );
       // 위젯 업데이트 실패는 조용히 무시
       if (kDebugMode) {
         debugPrint('위젯 업데이트 실패: $e');
@@ -222,6 +298,102 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  int? get _currentSchoolId =>
+      context.read<UnivProvider>().selectedUniversity?.schoolId;
+
+  String _toDateKey(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
+
+  int _dateOffsetFromToday(DateTime date) {
+    final today = DateTime.now();
+    final onlyDate = DateTime(date.year, date.month, date.day);
+    final onlyToday = DateTime(today.year, today.month, today.day);
+    return onlyDate.difference(onlyToday).inDays;
+  }
+
+  void _setMealRequestContext({
+    required String requestType,
+    String? changeSource,
+  }) {
+    _nextMealRequestType = requestType;
+    _nextMealChangeSource = changeSource;
+  }
+
+  ({String requestType, String? changeSource}) _consumeMealRequestContext() {
+    final requestType = _nextMealRequestType;
+    final changeSource = _nextMealChangeSource;
+    _nextMealRequestType = 'initial_load';
+    _nextMealChangeSource = null;
+    return (requestType: requestType, changeSource: changeSource);
+  }
+
+  void _resetStateExposureGuards() {
+    _lastEmptyStateKey = null;
+    _loggedErrorStateKeys.clear();
+  }
+
+  String _errorTypeOf(Object error) {
+    if (error is NetworkException) return 'network_error';
+    return 'unknown_error';
+  }
+
+  void _logDateChangeIfNeeded({
+    required DateTime previousDate,
+    required DateTime nextDate,
+    required String changeSource,
+  }) {
+    if (_isSameDay(previousDate, nextDate)) return;
+
+    final schoolId = _currentSchoolId;
+    if (schoolId == null) return;
+
+    AnalyticsService.instance.logDateChange(
+      schoolId: schoolId,
+      previousDate: _toDateKey(previousDate),
+      mealDate: _toDateKey(nextDate),
+      dateOffset: _dateOffsetFromToday(nextDate),
+      changeSource: changeSource,
+      daysDelta: DateTime(
+        nextDate.year,
+        nextDate.month,
+        nextDate.day,
+      ).difference(DateTime(previousDate.year, previousDate.month, previousDate.day)).inDays,
+    );
+  }
+
+  void _logEmptyStateIfNeeded() {
+    final schoolId = _currentSchoolId;
+    if (schoolId == null) return;
+
+    final mealDate = _toDateKey(_selectedDate);
+    final contextKey = '$schoolId|$mealDate';
+    if (_lastEmptyStateKey == contextKey) return;
+
+    _lastEmptyStateKey = contextKey;
+    AnalyticsService.instance.logMealEmptyStateView(
+      schoolId: schoolId,
+      mealDate: mealDate,
+      dateOffset: _dateOffsetFromToday(_selectedDate),
+    );
+  }
+
+  void _logErrorStateIfNeeded(Object error) {
+    final schoolId = _currentSchoolId;
+    if (schoolId == null) return;
+
+    final mealDate = _toDateKey(_selectedDate);
+    final errorType = _errorTypeOf(error);
+    final contextKey = '$schoolId|$mealDate|$errorType';
+    if (_loggedErrorStateKeys.contains(contextKey)) return;
+
+    _loggedErrorStateKeys.add(contextKey);
+    AnalyticsService.instance.logMealErrorStateView(
+      schoolId: schoolId,
+      mealDate: mealDate,
+      dateOffset: _dateOffsetFromToday(_selectedDate),
+      errorType: errorType,
+    );
   }
 
   /// StaleDataException 발생 시 SnackBar를 띄우는 헬퍼 함수
@@ -244,44 +416,112 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _loadMeals() {
+    _setMealRequestContext(requestType: 'initial_load');
     setState(() {
       _mealFuture = _fetchData();
     });
   }
 
   void _changeSelectedDateByDays(int days) {
+    final previousDate = _selectedDate;
+    final nextDate = _selectedDate.add(Duration(days: days));
+    _setMealRequestContext(
+      requestType: 'date_change',
+      changeSource: 'swipe',
+    );
+    _logDateChangeIfNeeded(
+      previousDate: previousDate,
+      nextDate: nextDate,
+      changeSource: 'swipe',
+    );
+    _resetStateExposureGuards();
+
     setState(() {
       _dateTransitionDirection = days >= 0 ? 1 : -1;
-      _selectedDate = _selectedDate.add(Duration(days: days));
+      _selectedDate = nextDate;
       _mealFuture = _fetchData();
     });
   }
 
   /// Pull-to-Refresh(당겨서 새로고침)을 위한 새로고침 함수
   Future<void> _refreshMeals() async {
+    _setMealRequestContext(requestType: 'user_pull_to_refresh');
+    final schoolId = _currentSchoolId;
+    final mealDate = _toDateKey(_selectedDate);
+
     setState(() {
       // catchError 내부를 async로 만들어 await를 사용할 수 있게 합니다.
-      _mealFuture = _repository.forceRefreshMeals(_selectedDate).catchError((
-        e,
-      ) async {
-        // 1. API 호출이 실패하면 (SocketException 등)
-        if (e is SocketException) {
-          // 2. 로컬 DB에 저장된 데이터라도 있는지 확인합니다.
-          final localData = await _repository.fetchFromDb(_selectedDate);
-          if (localData.isNotEmpty) {
-            // 3a. 로컬 데이터가 있으면, SnackBar를 띄우고 그 데이터를 반환합니다.
-            _showStaleDataSnackbar(
-              StaleDataException(
-                localData,
-                message: "새로고침에 실패했습니다. 오프라인 정보를 표시합니다.",
-              ),
-            );
-            return localData;
-          }
-        }
-        // 3b. 로컬 데이터조차 없거나 다른 종류의 에러이면, 에러 화면을 보여줍니다.
-        throw NetworkException();
-      });
+      _mealFuture = _repository
+          .forceRefreshMeals(_selectedDate)
+          .then((meals) {
+            if (schoolId != null) {
+              AnalyticsService.instance.logMealApiRequest(
+                schoolId: schoolId,
+                mealDate: mealDate,
+                requestType: 'user_pull_to_refresh',
+                result: 'success',
+              );
+              AnalyticsService.instance.logViewMeal(
+                schoolId: schoolId,
+                mealDate: mealDate,
+                dateOffset: _dateOffsetFromToday(_selectedDate),
+                mealCount: meals.length,
+              );
+            }
+            return meals;
+          })
+          .catchError((e) async {
+            // 1. API 호출이 실패하면 (SocketException 등)
+            if (e is SocketException) {
+              // 2. 로컬 DB에 저장된 데이터라도 있는지 확인합니다.
+              final localData = await _repository.fetchFromDb(_selectedDate);
+              if (localData.isNotEmpty) {
+                if (schoolId != null) {
+                  AnalyticsService.instance.logMealApiRequest(
+                    schoolId: schoolId,
+                    mealDate: mealDate,
+                    requestType: 'user_pull_to_refresh',
+                    result: 'stale_data',
+                  );
+                  AnalyticsService.instance.logViewMeal(
+                    schoolId: schoolId,
+                    mealDate: mealDate,
+                    dateOffset: _dateOffsetFromToday(_selectedDate),
+                    mealCount: localData.length,
+                  );
+                }
+                // 3a. 로컬 데이터가 있으면, SnackBar를 띄우고 그 데이터를 반환합니다.
+                _showStaleDataSnackbar(
+                  StaleDataException(
+                    localData,
+                    message: "새로고침에 실패했습니다. 오프라인 정보를 표시합니다.",
+                  ),
+                );
+                return localData;
+              }
+
+              if (schoolId != null) {
+                AnalyticsService.instance.logMealApiRequest(
+                  schoolId: schoolId,
+                  mealDate: mealDate,
+                  requestType: 'user_pull_to_refresh',
+                  result: 'network_error',
+                );
+              }
+              // 3b. 로컬 데이터조차 없으면 에러 화면을 보여줍니다.
+              throw NetworkException();
+            }
+
+            if (schoolId != null) {
+              AnalyticsService.instance.logMealApiRequest(
+                schoolId: schoolId,
+                mealDate: mealDate,
+                requestType: 'user_pull_to_refresh',
+                result: 'unknown_error',
+              );
+            }
+            throw NetworkException();
+          });
     });
   }
 
@@ -294,6 +534,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       lastDate: DateTime(2030),
     );
     if (picked != null && picked != _selectedDate) {
+      final previousDate = _selectedDate;
+      _setMealRequestContext(
+        requestType: 'date_change',
+        changeSource: 'picker',
+      );
+      _logDateChangeIfNeeded(
+        previousDate: previousDate,
+        nextDate: picked,
+        changeSource: 'picker',
+      );
+      _resetStateExposureGuards();
+
       setState(() {
         _dateTransitionDirection = picked.isAfter(_selectedDate) ? 1 : -1;
         _selectedDate = picked;
@@ -402,9 +654,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Text(message),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () => setState(() {
+            onPressed: () {
+              final schoolId = _currentSchoolId;
+              if (schoolId != null) {
+                AnalyticsService.instance.logMealRetryTap(
+                  schoolId: schoolId,
+                  mealDate: _toDateKey(_selectedDate),
+                  previousErrorType: _errorTypeOf(error),
+                );
+              }
               _loadMeals();
-            }), // 재시도 버튼
+            }, // 재시도 버튼
             child: const Text("다시 시도"),
           ),
         ],
@@ -616,16 +876,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       )
                     // 에러 발생
                     else if (snapshot.hasError)
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: _buildErrorWidget(snapshot.error!),
-                      )
+                      () {
+                        _logErrorStateIfNeeded(snapshot.error!);
+                        return SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _buildErrorWidget(snapshot.error!),
+                        );
+                      }()
                     // 데이터 없을 시 비어있음 표시
                     else if (!snapshot.hasData || snapshot.data!.isEmpty)
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: _buildEmptyState(),
-                      )
+                      () {
+                        _logEmptyStateIfNeeded();
+                        return SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _buildEmptyState(),
+                        );
+                      }()
                     // 데이터 로딩 성공 -> MealList 위젯 생성
                     else
                       _buildMealList(snapshot.data!), // Sliver 직접 추가
