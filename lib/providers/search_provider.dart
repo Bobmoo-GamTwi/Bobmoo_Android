@@ -56,6 +56,7 @@ class SearchProvider extends ChangeNotifier {
   }
 
   void updateKeyword(String keyword) {
+    if (_keyword == keyword) return;
     _keyword = keyword;
     notifyListeners();
   }

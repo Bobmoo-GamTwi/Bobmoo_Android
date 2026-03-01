@@ -60,6 +60,10 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<SearchProvider>().updateKeyword('');
+    });
     _selectedUniv = context.read<UnivProvider>().selectedUniversity;
     _initialSelectedUniv = _selectedUniv;
   }
