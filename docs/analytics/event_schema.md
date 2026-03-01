@@ -3,11 +3,12 @@
 ## 1) 문서 메타
 
 - 문서 목적: BobMoo 앱의 Firebase Analytics 이벤트 수집 규칙과 이벤트 스키마를 표준화한다.
-- 문서 버전: `v0.2`
+- 문서 버전: `v0.3`
 - 작성일: `2026-03-01`
 - 오너: 밥묵자 안드로이드 개발팀
 - 상태: 초안 (Draft)
 - 변경 이력:
+  - `v0.3` (`2026-03-01`): `env` 공용 파라미터(dev/prod) 추가, 앱 시작 시 default event parameter 설정 규칙 추가
   - `v0.2` (`2026-03-01`): `date_change` 확장(`change_source`, `days_delta`), 추가 이벤트 6종 보강, 중복 발화 가드 규칙 추가
   - `v0.1` (`2026-03-01`): 초기 이벤트 스키마 초안 작성
 
@@ -42,6 +43,8 @@
 
 - `screen_view`는 `FirebaseAnalyticsObserver`로 자동 수집하는 것을 기본으로 한다.
 - 자동 수집이 누락되는 사용자 액션(버튼 탭, 조회 시도, 결과 상태)은 커스텀 이벤트로 보완한다.
+- 앱 시작 시 `setDefaultEventParameters`를 통해 `env`를 공용 파라미터로 주입한다.
+  - 값 규칙: `prod`(release 빌드), `dev`(debug/profile 빌드)
 
 ### 3.5 발화 규칙(중복 방지)
 
@@ -72,11 +75,12 @@
 | `screen_name` | string | N | 이벤트 발생 시점 화면명 (화면 문맥이 있을 때) |
 | `route_name` | string | N | 라우트명 (`/home` 등) |
 | `app_version` | string | N | 앱 버전 |
+| `env` | string | Y | 실행 환경 (`prod` / `dev`) |
 
 안드로이드 단일 플랫폼 운영 기준으로 `platform` 공통 파라미터는 현재 사용하지 않는다.
 멀티 플랫폼(iOS/Web) 확장 시 재도입을 검토한다.
 
-## 6) 이벤트 카탈로그 (v0.2)
+## 6) 이벤트 카탈로그 (v0.3)
 
 ### 6.1 `screen_view`
 
