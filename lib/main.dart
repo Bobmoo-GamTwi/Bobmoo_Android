@@ -91,8 +91,9 @@ class BobMooApp extends StatelessWidget {
               // Glance 위젯 액션(e.g. glance-action:/CALLBACK?...) fallback
               return rawRouteName.toUpperCase().contains(':/CALLBACK');
             }();
-            final normalizedRouteName =
-                isWidgetCallbackRoute ? "/" : rawRouteName;
+            final normalizedRouteName = isWidgetCallbackRoute
+                ? "/"
+                : rawRouteName;
 
             if (kDebugMode) {
               debugPrint(
@@ -132,9 +133,27 @@ class BobMooApp extends StatelessWidget {
 
               // 설정화면 라우트
               case "/settings":
-                return MaterialPageRoute(
+                return PageRouteBuilder(
                   settings: settings,
-                  builder: (_) => const SettingsScreen(),
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      const SettingsScreen(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                        const begin = Offset(1.0, 0.0);
+                        const end = Offset.zero;
+                        const curve = Curves.ease;
+
+                        final tween = Tween(
+                          begin: begin,
+                          end: end,
+                        ).chain(CurveTween(curve: curve));
+                        final offsetAnimation = animation.drive(tween);
+
+                        return SlideTransition(
+                          position: offsetAnimation,
+                          child: child,
+                        );
+                      },
                 );
 
               // 잘못된 라우트 이름
