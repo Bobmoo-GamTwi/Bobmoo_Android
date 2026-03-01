@@ -1,5 +1,6 @@
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/search_provider.dart';
+import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/ui/components/buttons/primary_button.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/ui/theme/app_shadow.dart';
@@ -40,6 +41,12 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
       ),
       toolbarHeight: 98.h,
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedUniv = context.read<UnivProvider>().selectedUniversity;
   }
 
   @override
