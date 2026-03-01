@@ -3,11 +3,12 @@
 ## 1) 문서 메타
 
 - 문서 목적: BobMoo 앱의 Firebase Analytics 이벤트 수집 규칙과 이벤트 스키마를 표준화한다.
-- 문서 버전: `v0.3`
+- 문서 버전: `v0.4`
 - 작성일: `2026-03-01`
 - 오너: 밥묵자 안드로이드 개발팀
 - 상태: 초안 (Draft)
 - 변경 이력:
+  - `v0.4` (`2026-03-01`): `app_gate_decision` 파라미터명 `target_route` -> `destination_route`로 명확화
   - `v0.3` (`2026-03-01`): `env` 공용 파라미터(dev/prod) 추가, 앱 시작 시 default event parameter 설정 규칙 추가
   - `v0.2` (`2026-03-01`): `date_change` 확장(`change_source`, `days_delta`), 추가 이벤트 6종 보강, 중복 발화 가드 규칙 추가
   - `v0.1` (`2026-03-01`): 초기 이벤트 스키마 초안 작성
@@ -97,7 +98,7 @@
 - 목적: 앱 시작 시 진입 분기 비율 확인 (`home` vs `onboarding`)
 - 트리거: `AppGate`에서 초기 분기 결정 시점
 - 파라미터
-  - `target_route` (string, required) - `/home` 또는 `/onboarding`
+  - `destination_route` (string, required) - `/home` 또는 `/onboarding`
   - `has_selected_school` (bool, required)
 
 ### 6.3 `select_school`
