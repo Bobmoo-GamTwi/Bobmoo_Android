@@ -124,7 +124,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final schoolId = _currentSchoolId;
 
     try {
-      final meals = await _repository.getMealsForDate(_selectedDate);
+      final fetchResult = await _repository.getMealsForDateWithSource(
+        _selectedDate,
+      );
+      final meals = fetchResult.meals;
+      final dataSource = _toAnalyticsDataSource(fetchResult.dataSource);
 
       if (schoolId != null) {
         AnalyticsService.instance.logMealApiRequest(
@@ -132,12 +136,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           mealDate: mealDate,
           requestType: requestContext.requestType,
           changeSource: requestContext.changeSource,
+          dataSource: dataSource,
+          triggerSource: AnalyticsTriggerSource.foreground,
           result: MealApiResult.success,
         );
         AnalyticsService.instance.logViewMeal(
           schoolId: schoolId,
           mealDate: mealDate,
           dateOffset: _analyticsHelper.dateOffsetFromToday(_selectedDate),
+          dataSource: dataSource,
           mealCount: meals.length,
         );
       }
@@ -156,12 +163,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             mealDate: mealDate,
             requestType: requestContext.requestType,
             changeSource: requestContext.changeSource,
+            dataSource: _toAnalyticsDataSource(e.dataSource),
+            triggerSource: AnalyticsTriggerSource.foreground,
             result: MealApiResult.staleData,
           );
           AnalyticsService.instance.logViewMeal(
             schoolId: schoolId,
             mealDate: mealDate,
             dateOffset: _analyticsHelper.dateOffsetFromToday(_selectedDate),
+            dataSource: _toAnalyticsDataSource(e.dataSource),
             mealCount: e.staleData.length,
           );
         }
@@ -176,6 +186,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             mealDate: mealDate,
             requestType: requestContext.requestType,
             changeSource: requestContext.changeSource,
+            triggerSource: AnalyticsTriggerSource.foreground,
             result: MealApiResult.networkError,
           );
         }
@@ -188,6 +199,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           mealDate: mealDate,
           requestType: requestContext.requestType,
           changeSource: requestContext.changeSource,
+          triggerSource: AnalyticsTriggerSource.foreground,
           result: MealApiResult.unknownError,
         );
       }
@@ -202,6 +214,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (_isWidgetUpdateInProgress) {
       AnalyticsService.instance.logWidgetSync(
         schoolId: schoolId,
+        triggerSource: AnalyticsTriggerSource.foreground,
         result: WidgetSyncResult.skippedInProgress,
       );
       if (kDebugMode) {
@@ -216,6 +229,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             _widgetUpdateMinInterval) {
       AnalyticsService.instance.logWidgetSync(
         schoolId: schoolId,
+        triggerSource: AnalyticsTriggerSource.foreground,
         result: WidgetSyncResult.skippedDebounce,
       );
       if (kDebugMode) {
@@ -237,11 +251,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       AnalyticsService.instance.logWidgetSync(
         schoolId: schoolId,
         cafeteriaCount: cafeteriaCount,
+        triggerSource: AnalyticsTriggerSource.foreground,
         result: WidgetSyncResult.success,
       );
     } catch (e) {
       AnalyticsService.instance.logWidgetSync(
         schoolId: schoolId,
+        triggerSource: AnalyticsTriggerSource.foreground,
         result: WidgetSyncResult.failure,
       );
       // 위젯 업데이트 실패는 조용히 무시
@@ -259,6 +275,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   int? get _currentSchoolId =>
       context.read<UnivProvider>().selectedUniversity?.schoolId;
+
+  AnalyticsDataSource _toAnalyticsDataSource(MealDataSource dataSource) {
+    switch (dataSource) {
+      case MealDataSource.dbHit:
+        return AnalyticsDataSource.dbHit;
+      case MealDataSource.apiFetched:
+        return AnalyticsDataSource.apiFetched;
+      case MealDataSource.dbStaleFallback:
+        return AnalyticsDataSource.dbStaleFallback;
+    }
+  }
 
   /// StaleDataException 발생 시 SnackBar를 띄우는 헬퍼 함수
   void _showStaleDataSnackbar(StaleDataException e) {
@@ -328,12 +355,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 schoolId: schoolId,
                 mealDate: mealDate,
                 requestType: MealApiRequestType.userPullToRefresh,
+                dataSource: AnalyticsDataSource.apiFetched,
+                triggerSource: AnalyticsTriggerSource.foreground,
                 result: MealApiResult.success,
               );
               AnalyticsService.instance.logViewMeal(
                 schoolId: schoolId,
                 mealDate: mealDate,
                 dateOffset: _analyticsHelper.dateOffsetFromToday(_selectedDate),
+                dataSource: AnalyticsDataSource.apiFetched,
                 mealCount: meals.length,
               );
             }
@@ -350,6 +380,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     schoolId: schoolId,
                     mealDate: mealDate,
                     requestType: MealApiRequestType.userPullToRefresh,
+                    dataSource: AnalyticsDataSource.dbStaleFallback,
+                    triggerSource: AnalyticsTriggerSource.foreground,
                     result: MealApiResult.staleData,
                   );
                   AnalyticsService.instance.logViewMeal(
@@ -358,6 +390,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     dateOffset: _analyticsHelper.dateOffsetFromToday(
                       _selectedDate,
                     ),
+                    dataSource: AnalyticsDataSource.dbStaleFallback,
                     mealCount: localData.length,
                   );
                 }
@@ -376,6 +409,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   schoolId: schoolId,
                   mealDate: mealDate,
                   requestType: MealApiRequestType.userPullToRefresh,
+                  triggerSource: AnalyticsTriggerSource.foreground,
                   result: MealApiResult.networkError,
                 );
               }
@@ -388,6 +422,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 schoolId: schoolId,
                 mealDate: mealDate,
                 requestType: MealApiRequestType.userPullToRefresh,
+                triggerSource: AnalyticsTriggerSource.foreground,
                 result: MealApiResult.unknownError,
               );
             }

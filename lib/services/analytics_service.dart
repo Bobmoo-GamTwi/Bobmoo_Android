@@ -55,6 +55,23 @@ enum MealApiResult {
   final String value;
 }
 
+enum AnalyticsDataSource {
+  dbHit('db_hit'),
+  apiFetched('api_fetched'),
+  dbStaleFallback('db_stale_fallback');
+
+  const AnalyticsDataSource(this.value);
+  final String value;
+}
+
+enum AnalyticsTriggerSource {
+  foreground('foreground'),
+  backgroundWorkmanager('background_workmanager');
+
+  const AnalyticsTriggerSource(this.value);
+  final String value;
+}
+
 enum AnalyticsErrorType {
   networkError('network_error'),
   unknownError('unknown_error');
@@ -202,6 +219,8 @@ class AnalyticsService {
     required String mealDate,
     required MealApiRequestType requestType,
     AnalyticsChangeSource? changeSource,
+    AnalyticsDataSource? dataSource,
+    required AnalyticsTriggerSource triggerSource,
     required MealApiResult result,
   }) {
     _logEvent(
@@ -211,6 +230,8 @@ class AnalyticsService {
         'meal_date': mealDate,
         'request_type': requestType.value,
         'change_source': changeSource?.value,
+        'data_source': dataSource?.value,
+        'trigger_source': triggerSource.value,
         'result': result.value,
       },
     );
@@ -220,6 +241,7 @@ class AnalyticsService {
     required int schoolId,
     required String mealDate,
     required int dateOffset,
+    AnalyticsDataSource? dataSource,
     int? mealCount,
   }) {
     _logEvent(
@@ -228,6 +250,7 @@ class AnalyticsService {
         'school_id': schoolId,
         'meal_date': mealDate,
         'date_offset': dateOffset,
+        'data_source': dataSource?.value,
         'meal_count': mealCount,
       },
     );
@@ -285,6 +308,7 @@ class AnalyticsService {
   void logWidgetSync({
     int? schoolId,
     int? cafeteriaCount,
+    required AnalyticsTriggerSource triggerSource,
     required WidgetSyncResult result,
   }) {
     _logEvent(
@@ -292,6 +316,7 @@ class AnalyticsService {
       parameters: {
         'school_id': schoolId,
         'cafeteria_count': cafeteriaCount,
+        'trigger_source': triggerSource.value,
         'result': result.value,
       },
     );
