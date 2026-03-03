@@ -217,11 +217,9 @@ class MealRepository {
     final bool isToday = responseDate.isAtSameMomentAs(
       DateUtils.dateOnly(DateTime.now()),
     );
+    bool isEmptyResponse = false;
 
     await isar.writeTxn(() async {
-      // 1. 해당 날짜의 기존 Meal 데이터 삭제 (중복 방지)
-      await isar.meals.filter().dateEqualTo(responseDate).deleteAll();
-
       final newMeals = <Meal>[];
 
       for (var cafeteria in response.schools.cafeterias) {
@@ -234,6 +232,17 @@ class MealRepository {
         newMeals.addAll(meals);
       }
 
+      // Empty 응답은 성공 캐시로 저장하지 않습니다.
+      // 기존 Meal 데이터는 유지하고, cacheStatus만 제거해 다음 진입 시 API를 다시 호출하게 합니다.
+      if (newMeals.isEmpty) {
+        isEmptyResponse = true;
+        await isar.menuCacheStatuses.filter().dateEqualTo(responseDate).deleteAll();
+        return;
+      }
+
+      // 1. 해당 날짜의 기존 Meal 데이터 삭제 (중복 방지)
+      await isar.meals.filter().dateEqualTo(responseDate).deleteAll();
+
       // 2. 모든 Meal 객체 저장 및 링크 연결
       await _saveMealsAndLinks(newMeals);
 
@@ -242,7 +251,11 @@ class MealRepository {
     });
 
     if (kDebugMode) {
-      print("💾 DB 저장 완료: $responseDate");
+      if (isEmptyResponse) {
+        print("⚠️ [Empty Response] 캐시 갱신 없이 유지: $responseDate");
+      } else {
+        print("💾 DB 저장 완료: $responseDate");
+      }
     }
   }
 
