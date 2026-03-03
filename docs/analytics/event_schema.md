@@ -3,11 +3,13 @@
 ## 1) 문서 메타
 
 - 문서 목적: BobMoo 앱의 Firebase Analytics 이벤트 수집 규칙과 이벤트 스키마를 표준화한다.
-- 문서 버전: `v0.6`
+- 문서 버전: `v0.8`
 - 작성일: `2026-03-01`
 - 오너: 밥묵자 안드로이드 개발팀
 - 상태: 초안 (Draft)
 - 변경 이력:
+  - `v0.8` (`2026-03-02`): `env` 공용 파라미터 값을 flavor 기준(`dev`/`staging`/`prod`)으로 변경
+  - `v0.7` (`2026-03-02`): `selected_school_id` user property 규칙 추가, `widget_default_cafeteria_change` 이벤트 추가
   - `v0.6` (`2026-03-01`): `data_source` / `trigger_source` 파라미터 추가 및 foreground/background 구분 규칙 명시
   - `v0.5` (`2026-03-01`): `meal_api_request.request_type`에 `retry` 추가
   - `v0.4` (`2026-03-01`): `app_gate_decision` 파라미터명 `target_route` -> `destination_route`로 명확화
@@ -51,7 +53,7 @@
 - `screen_view`는 `FirebaseAnalyticsObserver`로 자동 수집하는 것을 기본으로 한다.
 - 자동 수집이 누락되는 사용자 액션(버튼 탭, 조회 시도, 결과 상태)은 커스텀 이벤트로 보완한다.
 - 앱 시작 시 `setDefaultEventParameters`를 통해 `env`를 공용 파라미터로 주입한다.
-  - 값 규칙: `prod`(release 빌드), `dev`(debug/profile 빌드)
+  - 값 규칙: flavor 기준 `dev` / `staging` / `prod`
 
 ### 3.5 발화 규칙(중복 방지)
 
@@ -60,6 +62,15 @@
   - `meal_empty_state_view`: `school_id + meal_date`
   - `meal_error_state_view`: `school_id + meal_date + error_type`
 - 날짜가 변경되면 중복 방지 키를 초기화하고 새 날짜 컨텍스트에서 다시 발화할 수 있다.
+
+### 3.6 사용자 속성(User Property) 규칙
+
+- `selected_school_id` user property를 사용해 현재 선택 학교 컨텍스트를 저장한다.
+- 값은 `University.schoolId`를 문자열로 변환해 저장한다. (예: `"1"`)
+- 갱신 시점:
+  - 앱 시작 시 로컬에 저장된 선택 학교 복원 직후
+  - 학교 선택/변경 확정 직후
+- 선택 학교가 없는 상태에서는 `selected_school_id`를 `null`로 설정해 초기화한다.
 
 ## 4) 라우트-스크린 매핑 표준
 
@@ -82,12 +93,12 @@
 | `screen_name` | string | N | 이벤트 발생 시점 화면명 (화면 문맥이 있을 때) |
 | `route_name` | string | N | 라우트명 (`/home` 등) |
 | `app_version` | string | N | 앱 버전 |
-| `env` | string | Y | 실행 환경 (`prod` / `dev`) |
+| `env` | string | Y | 실행 환경 (`dev` / `staging` / `prod`) |
 
 안드로이드 단일 플랫폼 운영 기준으로 `platform` 공통 파라미터는 현재 사용하지 않는다.
 멀티 플랫폼(iOS/Web) 확장 시 재도입을 검토한다.
 
-## 6) 이벤트 카탈로그 (v0.6)
+## 6) 이벤트 카탈로그 (v0.7)
 
 ### 6.1 `screen_view`
 
@@ -98,6 +109,7 @@
     - 예: `/home` -> `home_screen`, `/select_school` -> `select_school_screen`
   - 자동 수집 이벤트는 GA4 기본 필드(`screen_name`, `screen_class`)를 우선 사용한다.
   - `route_name`은 자동 `screen_view`의 필수 필드가 아니며, 필요 시 별도 커스텀 이벤트에서 사용한다.
+  - 학교 컨텍스트 분석은 이벤트 파라미터가 아닌 user property `selected_school_id`를 기준으로 결합한다.
 
 ### 6.2 `app_gate_decision`
 
@@ -221,6 +233,16 @@
   - `previous_error_type` (string, required) - `network_error` / `unknown_error`
   - `screen_name` (string, required) - `home_screen`
 
+### 6.14 `widget_default_cafeteria_change`
+
+- 목적: 사용자의 기본 위젯 식당 선호 변경 패턴 분석
+- 트리거: 설정 화면에서 기본 위젯 식당 변경 저장 완료 시점
+- 파라미터
+  - `school_id` (int, optional) - 선택 학교가 있을 때만
+  - `previous_cafeteria` (string, optional) - 이전 선택 식당
+  - `new_cafeteria` (string, required) - 새 선택 식당
+  - `screen_name` (string, required) - `settings_screen`
+
 ## 7) 이벤트별 분석 질문
 
 - `app_gate_decision`: 첫 진입 사용자가 온보딩으로 얼마나 이동하는가?
@@ -235,6 +257,7 @@
 - `meal_empty_state_view`: 특정 학교/날짜에서 빈 데이터 노출이 반복되는가?
 - `meal_error_state_view`: 사용자 체감 에러가 어떤 유형으로 집중되는가?
 - `meal_retry_tap`: 에러 이후 재시도 전환률은 어느 정도인가?
+- `widget_default_cafeteria_change`: 기본 위젯 식당은 어떤 학교/사용자군에서 어떻게 바뀌는가?
 
 ## 8) 구현 체크리스트
 
@@ -242,9 +265,10 @@
 - [ ] `AppGate` 분기 이벤트 추가 (`app_gate_decision`)
 - [ ] 학교 선택/변경 이벤트 추가 (`select_school`, `change_school`)
 - [ ] 식단 조회/요청 이벤트 추가 (`view_meal`, `meal_api_request`)
-- [ ] 위젯 동기화 이벤트 추가 (`widget_sync`)
+- [ ] 위젯 이벤트 추가 (`widget_sync`, `widget_default_cafeteria_change`)
 - [ ] 학교 목록/검색 상호작용 이벤트 추가 (`school_list_load_result`, `school_search_result_tap`)
 - [ ] 날짜 변경 및 상태 노출 이벤트 추가 (`date_change`, `meal_empty_state_view`, `meal_error_state_view`, `meal_retry_tap`)
+- [ ] `selected_school_id` user property 갱신 로직 추가 (초기 복원/학교 변경 시점)
 - [ ] DebugView에서 이벤트명/파라미터 유입 확인
 
 ## 9) 운영 메모

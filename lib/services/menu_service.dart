@@ -7,14 +7,20 @@ class MenuService {
   final String _baseUrl = 'https://bobmoo.site/api/v1/menu';
 
   // 날짜를 인자로 받아 해당 날짜의 메뉴를 가져오는 함수
-  Future<MenuResponse> getMenu(DateTime date) async {
+  Future<MenuResponse> getMenu(
+    DateTime date, {
+    required String schoolNameK,
+  }) async {
     // 날짜를 'yyyy-MM-dd' 형식의 문자열로 변환
     String formattedDate =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-    // TODO: 나중에 학교 선택에 따라 달라지게 처리 (임시로 인하대학교로 고정)
+    final uri = Uri.parse(
+      _baseUrl,
+    ).replace(queryParameters: {'date': formattedDate, 'school': schoolNameK});
+
     final response = await http.get(
-      Uri.parse('$_baseUrl?date=$formattedDate&school=인하대학교'),
+      uri,
     );
 
     if (response.statusCode == 200) {
