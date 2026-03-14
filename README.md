@@ -92,7 +92,7 @@ Local Cache (Isar) / Network
 ### Branch Naming
 feature/#{issue-number}-{short-description}
 
-예시
+### 예시
 feature/#42-home-screen  
 fix/#18-api-error
 
