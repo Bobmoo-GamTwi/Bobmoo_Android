@@ -12,7 +12,8 @@
 <br>
 
 ## 🍚 Bobmoo 서비스 소개
-> 어제, 오늘, 내일 급식을 한눈에! 원하는 학교의 학생식당·교직원식당·생활관식당 메뉴를 실시간으로 확인하고, 위젯으로 더욱 편리하게
+> 어제·오늘·내일 급식을 한눈에 확인하고  
+> 학교 식당 메뉴를 위젯으로 빠르게 확인할 수 있는 앱
 
 <br>
 
@@ -27,7 +28,7 @@
 
 <br>
 
-## 🍎 Android Developer
+## 👨‍💻 Developer
 | 안현우<br/>[@hwoo7449](https://github.com/hwoo7449) |
 | :---: |
 | <p align="center"><img src="https://avatars.githubusercontent.com/u/37904408?v=4" width="200"/></p> |
@@ -54,6 +55,22 @@
 
 <br>
 
+## 🏗 Architecture
+
+Bobmoo는 다음과 같은 계층 구조로 설계되었습니다.
+
+UI (Screens)
+   ↓
+Provider (State Management)
+   ↓
+Repository (Data Access)
+   ↓
+Service (API / Background)
+   ↓
+Local Cache (Isar) / Network
+
+<br>
+
 ## 📱 Screenshots
 | 스플래시 | 온보딩 | 학교검색 |
 |:---:|:---:|:---:|
@@ -67,11 +84,17 @@
 
 ## 🌿 Git Flow 
 1. Issue를 생성한다.
-2. 현재 브랜치가 아닌 main 브랜치에서 Branch Naming Rule을 따르는 브랜치를 생성한다.
-3. 이슈에 작성한 내용을 기반으로 기능을 구현한다. (+ 커밋)
-4. add - commit - push - 간략한 PR 과정을 거친다.
-5. PR 올린 후 코드 리뷰를 통해 merge 한다.
-6. merge 이후에는 로컬에서도 main으로 이동하여 pull 받는다.
+2. main 브랜치에서 **Branch Naming Rule**에 따라 브랜치를 생성한다.
+3. 기능 구현 후 commit / push 한다.
+4. PR을 생성하고 코드 리뷰 후 merge 한다.
+5. merge 이후 로컬 main 브랜치로 이동 후 pull 한다.
+
+### Branch Naming
+feature/#{issue-number}-{short-description}
+
+예시
+feature/#42-home-screen  
+fix/#18-api-error
 
 <br>
 
@@ -100,7 +123,7 @@ feat: #1 홈 화면 구현
 fix: #2 api 응답 파싱 오류 수정
 ```
 
-## 📁 프로젝트 구조
+## 📁 Foldering
 
 > 갱신 명령어: `dart run tool/generate_readme_structure.dart`
 
