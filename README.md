@@ -95,43 +95,68 @@ feat: #1 홈 화면 구현
 fix: #2 api 응답 파싱 오류 수정
 ```
 
-## 프로젝트 구조
+## 📁 프로젝트 구조
 
+> 갱신 명령어: `dart run tool/generate_readme_structure.dart`
+
+<!-- GENERATED:LIB_TREE:START -->
 ```
-lib/
-├── main.dart                 # 앱 진입점
-├── locator.dart              # 서비스 로케이터 (DI)
-├── collections/              # Isar DB 컬렉션
-│   ├── meal_collection.dart
-│   ├── menu_cache_status.dart
-│   └── restaurant_collection.dart
-├── constants/                # 상수 및 테마
-│   ├── app_colors.dart
-│   └── app_constants.dart
-├── models/                   # 데이터 모델
-│   ├── menu_model.dart
-│   ├── meal_by_cafeteria.dart
-│   ├── meal_widget_data.dart
-│   └── all_cafeterias_widget_data.dart
-├── repositories/             # Repository 패턴
-│   └── meal_repository.dart
-├── screens/                  # 화면
-│   ├── home_screen.dart
-│   └── settings_screen.dart
-├── services/                 # 서비스
-│   ├── menu_service.dart
-│   ├── background_service.dart
-│   ├── permission_service.dart
-│   └── widget_service.dart
-├── utils/                    # 유틸리티
-│   ├── hours_parser.dart
-│   └── meal_utils.dart
-└── widgets/                  # 재사용 가능한 위젯
-    ├── cafeteria_menu_column.dart
-    ├── meal_item_row.dart
-    ├── open_status_badge.dart
-    └── time_grouped_card.dart
+🍚 bobmoo_android
+└── 📁 lib
+    ├── 📄 main.dart                            # 앱 진입점
+    ├── 📄 locator.dart                         # DI(Service Locator) 설정
+    ├── 📁 collections                          # Isar 컬렉션/스키마
+    │   ├── 📄 meal_collection.dart
+    │   ├── 📄 menu_cache_status.dart
+    │   └── 📄 restaurant_collection.dart
+    ├── 📁 constants                            # 앱 전역 상수
+    │   └── 📄 app_constants.dart
+    ├── 📁 models                               # 도메인/위젯 데이터 모델
+    │   ├── 📄 all_cafeterias_widget_data.dart
+    │   ├── 📄 meal_by_cafeteria.dart
+    │   ├── 📄 meal_widget_data.dart
+    │   ├── 📄 menu_model.dart
+    │   └── 📄 university.dart
+    ├── 📁 providers                            # 상태 관리(Provider)
+    │   ├── 📄 search_provider.dart
+    │   └── 📄 univ_provider.dart
+    ├── 📁 repositories                         # 데이터 접근 계층
+    │   └── 📄 meal_repository.dart
+    ├── 📁 screens                              # 앱 화면 및 화면 보조 로직
+    │   ├── 📄 app_gate.dart
+    │   ├── 📄 home_analytics_helper.dart
+    │   ├── 📄 home_screen.dart
+    │   ├── 📄 home_widget_sync_helper.dart
+    │   ├── 📄 loading_screen.dart
+    │   ├── 📄 onboarding_screen.dart
+    │   ├── 📄 select_school_screen.dart
+    │   ├── 📄 settings_screen.dart
+    │   └── 📄 splash_screen.dart
+    ├── 📁 services                             # 외부 연동/백그라운드 서비스
+    │   ├── 📄 analytics_service.dart
+    │   ├── 📄 background_service.dart
+    │   ├── 📄 menu_service.dart
+    │   └── 📄 widget_service.dart
+    ├── 📁 ui                                   # 공통 UI 레이어
+    │   ├── 📁 components                       # 재사용 UI 컴포넌트
+    │   │   ├── 📁 buttons
+    │   │   │   └── 📄 primary_button.dart
+    │   │   ├── 📁 cards
+    │   │   │   ├── 📄 setting_section_card.dart
+    │   │   │   └── 📄 time_grouped_card.dart
+    │   │   └── 📁 meal
+    │   │       ├── 📄 cafeteria_menu_column.dart
+    │   │       ├── 📄 meal_item_row.dart
+    │   │       └── 📄 open_status_badge.dart
+    │   └── 📁 theme                            # 테마 시스템
+    │       ├── 📄 app_colors.dart
+    │       ├── 📄 app_shadow.dart
+    │       └── 📄 app_typography.dart
+    └── 📁 utils                                # 유틸리티
+        ├── 📄 hours_parser.dart
+        └── 📄 meal_utils.dart
 ```
+<!-- GENERATED:LIB_TREE:END -->
 
 <br>
 
