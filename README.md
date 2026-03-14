@@ -55,8 +55,13 @@
 <br>
 
 ## 📱 Screenshots
-| 홈 화면 | 학교 검색 | 설정 |
+| 스플래시 | 온보딩 | 학교검색 |
 |:---:|:---:|:---:|
+| <img width="200" src="https://github.com/user-attachments/assets/1c688263-3320-4930-b727-a8189e3fe63e" /> | <img width="200" src="https://github.com/user-attachments/assets/980c9c93-13e6-4046-a997-6526c5c478b4" /> | <img width="200" src="https://github.com/user-attachments/assets/de4a04bc-2356-4d63-87a8-ec708663e7f2" /> |
+
+| 홈 화면 | 설정 | 위젯 |
+|:---:|:---:|:---:|
+| <img width="200" src="https://github.com/user-attachments/assets/347f9e4a-1e75-451b-9c80-2b965e849942" /> | <img width="200" src="https://github.com/user-attachments/assets/d2479aeb-7060-48f6-9136-84cf0f152e06" /> | <img width="200" src="https://github.com/user-attachments/assets/15a2280b-6438-4958-b89e-b0a703ea1cd1" /> |
 
 <br>
 
