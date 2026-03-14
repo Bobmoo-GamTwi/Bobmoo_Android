@@ -1,8 +1,6 @@
 ## 📌 관련 이슈
 Closes #
-Linear: <Linear 이슈 URL>
-Github: <Github 이슈 URL>
-- [ ] Linear/GitHub 이슈 상호 링크 확인
+Closes BOB-
 
 ---
 
@@ -15,14 +13,6 @@ Github: <Github 이슈 URL>
 
 ---
 
-## 🔎 변경 사항
-- UI 변경 여부:
-- API 변경 여부:
-- 의존성 변경 여부:
-
----
-
 ## ✅ 체크리스트
-- [ ] PR 제목 규칙 준수 ([태그] 제목)
+- [ ] PR 제목 규칙 준수
 - [ ] 빌드 테스트 완료
-- [ ] 리뷰 반영 완료
