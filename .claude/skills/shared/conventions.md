@@ -73,7 +73,7 @@
 
 GitHub 라벨과 Linear 라벨 모두 이슈/PR 생성 시 최소 1개를 부여한다.
 
-GitHub 사용 가능 라벨: `Feature`, `Bug`, `Improvement`, `Refactor`, `Setting`, `Design`, `Release`
+GitHub 사용 가능 라벨: `Feature`, `Bug`, `Improvement`, `Refactor`, `Setting`, `Design`, `Chore`, `Release`
 
 키워드 기반 기본 라벨:
 - bug/crash/error/fix → `Bug`
@@ -82,5 +82,6 @@ GitHub 사용 가능 라벨: `Feature`, `Bug`, `Improvement`, `Refactor`, `Setti
 - ui/style/theme → `Design`
 - setting/config/build/ci/gradle → `Setting`
 - 개선/improve → `Improvement`
+- chore/docs/readme/정리 → `Chore`
 
-확신이 낮으면 `Improvement`를 사용한다.
+확신이 낮으면 `Feature` 또는 `Chore`를 사용한다.
