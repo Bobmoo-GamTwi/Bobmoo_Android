@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bobmoo/ui/components/cards/setting_section_card.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/university.dart';
@@ -5,12 +7,14 @@ import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/services/widget_service.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -30,6 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   /// 앱 버전 정보
   String _appVersion = '';
+  String _appBuildNumber = '';
 
   @override
   void initState() {
@@ -56,6 +61,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         // version: pubspec.yaml의 version (예: 1.0.0)
         // buildNumber: 빌드 번호 (예: 1)
         _appVersion = 'v${packageInfo.version}';
+        _appBuildNumber = packageInfo.buildNumber;
       });
     }
   }
@@ -128,18 +134,85 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Future<void> _openSelectSchool() async {
-    final University? university = await Navigator.of(
-      context,
-    ).pushNamed<University?>(
-      "/select_school",
-      arguments: {'allowBack': false, 'entryPoint': 'settings'},
-    );
+    final University? university =
+        await Navigator.of(
+          context,
+        ).pushNamed<University?>(
+          "/select_school",
+          arguments: {'allowBack': false, 'entryPoint': 'settings'},
+        );
 
     if (!mounted) return;
 
     if (university != null) {
       context.read<UnivProvider>().updateUniversity(university);
     }
+  }
+
+  Future<void> _sendFeedback() async {
+    final schoolId = context.read<UnivProvider>().selectedUniversity?.schoolId;
+    final selectedSchool = context.read<UnivProvider>().univName;
+
+    AnalyticsService.instance.logFeedbackTap(
+      schoolId: schoolId,
+      appVersion: _appVersion,
+    );
+
+    final osVersion =
+        '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
+    final deviceInfo = await _getDeviceInfo();
+
+    final body = [
+      '아래에 피드백을 작성해주세요.',
+      '',
+      '---',
+      '앱 버전: $_appVersion ($_appBuildNumber)',
+      '학교: $selectedSchool',
+      'OS: $osVersion',
+      '기기: $deviceInfo',
+      '',
+    ].join('\n');
+
+    final query =
+        'subject=${Uri.encodeComponent('[밥묵자] 피드백')}'
+        '&body=${Uri.encodeComponent(body)}';
+    final uri = Uri.parse('mailto:hwoo7449@gmail.com?$query');
+
+    if (!await launchUrl(uri)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '이메일 앱을 열 수 없습니다.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.colorBlack,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+        ),
+      );
+    }
+  }
+
+  Future<String> _getDeviceInfo() async {
+    final plugin = DeviceInfoPlugin();
+
+    if (Platform.isAndroid) {
+      final androidInfo = await plugin.androidInfo;
+      final manufacturer = androidInfo.manufacturer.trim();
+      final model = androidInfo.model.trim();
+      return '$manufacturer $model';
+    }
+
+    return '알 수 없음';
   }
 
   @override
@@ -247,114 +320,43 @@ class _SettingsScreenState extends State<SettingsScreen>
 
           SizedBox(height: 20.h),
 
-          // // 위젯 실시간 업데이트 카드
-          // FutureBuilder<bool>(
-          //   future: _permissionFuture,
-          //   builder: (context, snapshot) {
-          //     if (snapshot.connectionState == ConnectionState.waiting) {
-          //       return _buildSettingsCard(
-          //         child: Row(
-          //           children: [
-          //             SizedBox(
-          //               width: 20.w,
-          //               height: 20.w,
-          //               child: CircularProgressIndicator(
-          //                 strokeWidth: 2,
-          //                 color: univColor,
-          //               ),
-          //             ),
-          //             SizedBox(width: 16.w),
-          //             Text(
-          //               '권한 상태를 확인 중...',
-          //               style: TextStyle(
-          //                 fontSize: 14.sp,
-          //                 color: AppColors.greyTextColor,
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       );
-          //     }
+          // 피드백 보내기 카드
+          SettingSectionCard(
+            title: "문의하기",
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _sendFeedback,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '이메일로 피드백 보내기',
+                          style: AppTypography.caption.m15,
+                        ),
+                        Icon(
+                          Icons.mail_outline_rounded,
+                          color: AppColors.colorGray3,
+                          size: 20.w,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 3.h),
+                    Divider(
+                      height: 1.h,
+                      thickness: 1.h,
+                      color: AppColors.colorGray5,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
 
-          //     final bool hasPermission = snapshot.data ?? false;
+          SizedBox(height: 20.h),
 
-          //     return _buildSettingsCard(
-          //       onTap: () async {
-          //         await PermissionService.openAlarmPermissionSettings();
-          //         setState(() {
-          //           _permissionFuture =
-          //               PermissionService.canScheduleExactAlarms();
-          //         });
-          //       },
-          //       child: Row(
-          //         children: [
-          //           Container(
-          //             padding: EdgeInsets.all(8.w),
-          //             decoration: BoxDecoration(
-          //               color: hasPermission
-          //                   ? Colors.green.withValues(alpha: 0.1)
-          //                   : Colors.orange.withValues(alpha: 0.1),
-          //               borderRadius: BorderRadius.circular(8.r),
-          //             ),
-          //             child: Icon(
-          //               hasPermission ? Icons.update : Icons.schedule,
-          //               color: hasPermission ? Colors.green : Colors.orange,
-          //               size: 22.w,
-          //             ),
-          //           ),
-          //           SizedBox(width: 12.w),
-          //           Expanded(
-          //             child: Column(
-          //               crossAxisAlignment: CrossAxisAlignment.start,
-          //               children: [
-          //                 Text(
-          //                   '위젯 실시간 업데이트',
-          //                   style: TextStyle(
-          //                     fontSize: 16.sp,
-          //                     fontWeight: FontWeight.w600,
-          //                     color: Colors.black87,
-          //                   ),
-          //                 ),
-          //                 SizedBox(height: 2.h),
-          //                 Text(
-          //                   hasPermission
-          //                       ? '활성화됨 · 매분 자동 업데이트'
-          //                       : '비활성화됨 · 탭하여 권한 설정',
-          //                   style: TextStyle(
-          //                     fontSize: 12.sp,
-          //                     color: hasPermission
-          //                         ? Colors.green.shade600
-          //                         : AppColors.greyTextColor,
-          //                   ),
-          //                 ),
-          //               ],
-          //             ),
-          //           ),
-          //           Container(
-          //             padding: EdgeInsets.symmetric(
-          //               horizontal: 10.w,
-          //               vertical: 4.h,
-          //             ),
-          //             decoration: BoxDecoration(
-          //               color: hasPermission
-          //                   ? Colors.green.withValues(alpha: 0.1)
-          //                   : Colors.orange.withValues(alpha: 0.1),
-          //               borderRadius: BorderRadius.circular(12.r),
-          //             ),
-          //             child: Text(
-          //               hasPermission ? 'ON' : 'OFF',
-          //               style: TextStyle(
-          //                 fontSize: 12.sp,
-          //                 fontWeight: FontWeight.w700,
-          //                 color: hasPermission ? Colors.green : Colors.orange,
-          //               ),
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-          //     );
-          //   },
-          // ),
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(15.r),
