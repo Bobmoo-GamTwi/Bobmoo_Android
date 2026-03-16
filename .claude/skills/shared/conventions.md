@@ -71,12 +71,16 @@
 
 ## 라벨 휴리스틱
 
-키워드 기반 기본 라벨:
-- bug/crash/error/fix -> `bug`
-- feature/add/implement -> `feature`
-- refactor/cleanup -> `refactor`
-- ui/style/theme -> `ui`
-- docs/readme -> `documentation`
-- build/ci/gradle -> `build`
+GitHub 라벨과 Linear 라벨 모두 이슈/PR 생성 시 최소 1개를 부여한다.
 
-확신이 낮으면 `feature` 또는 `chore`를 사용합니다.
+GitHub 사용 가능 라벨: `Feature`, `Bug`, `Improvement`, `Refactor`, `Setting`, `Design`, `Release`
+
+키워드 기반 기본 라벨:
+- bug/crash/error/fix → `Bug`
+- feature/add/implement → `Feature`
+- refactor/cleanup → `Refactor`
+- ui/style/theme → `Design`
+- setting/config/build/ci/gradle → `Setting`
+- 개선/improve → `Improvement`
+
+확신이 낮으면 `Improvement`를 사용한다.
