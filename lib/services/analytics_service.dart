@@ -350,6 +350,20 @@ class AnalyticsService {
     );
   }
 
+  void logFeedbackTap({
+    int? schoolId,
+    required String appVersion,
+  }) {
+    _logEvent(
+      name: 'feedback_tap',
+      parameters: {
+        'school_id': schoolId,
+        'app_version': appVersion,
+        'screen_name': 'settings_screen',
+      },
+    );
+  }
+
   Future<void> setSelectedSchoolUserProperty(int? schoolId) async {
     try {
       await _analytics.setUserProperty(
