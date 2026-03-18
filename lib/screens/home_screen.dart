@@ -80,6 +80,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    _analyticsHelper.setMealRequestContext(
+      requestType: MealApiRequestType.universityChanged,
+    );
+
+    _mealFuture = _fetchData();
+  }
+
   /// 인앱 업데이트를 확인하고, 가능하면 유연한 업데이트를 시작하는 함수
   Future<void> _checkForUpdate() async {
     try {
