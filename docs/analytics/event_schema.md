@@ -155,7 +155,7 @@
 - 파라미터
   - `school_id` (int, required)
   - `meal_date` (string, required)
-  - `request_type` (string, required) - `initial_load` / `retry` / `user_pull_to_refresh` / `date_change`
+  - `request_type` (string, required) - `initial_load` / `retry` / `user_pull_to_refresh` / `date_change` / `university_changed`
   - `change_source` (string, optional) - `request_type=date_change`일 때만, `swipe` / `picker`
   - `data_source` (string, optional) - `db_hit` / `api_fetched` / `db_stale_fallback`
   - `trigger_source` (string, required) - `foreground` / `background_workmanager`

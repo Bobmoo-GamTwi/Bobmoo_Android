@@ -40,6 +40,7 @@ enum MealApiRequestType {
   initialLoad('initial_load'),
   retry('retry'),
   userPullToRefresh('user_pull_to_refresh'),
+  universityChanged('university_changed'),
   dateChange('date_change');
 
   const MealApiRequestType(this.value);

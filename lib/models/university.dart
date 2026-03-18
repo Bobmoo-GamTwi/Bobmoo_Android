@@ -36,10 +36,10 @@ class University {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is University && other.schoolName == schoolName;
+      other is University && other.schoolId == schoolId;
 
   @override
-  int get hashCode => schoolName.hashCode;
+  int get hashCode => schoolId.hashCode;
 
   Color hexToColor() {
     return Color(int.parse('0xff$schoolColor'));
