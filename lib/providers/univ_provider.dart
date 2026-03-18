@@ -52,6 +52,14 @@ class UnivProvider extends ChangeNotifier {
       _lastUnivColor = univ.hexToColor();
     }
 
+    final isar = locator<Isar>();
+
+    // 학교가 변경되면 기존의 모든 이전 학교의 식단 및 캐시 삭제
+    await isar.writeTxn(() async {
+      await isar.meals.clear();
+      await isar.menuCacheStatuses.clear();
+    });
+
     _selectedUniversity = univ;
 
     // 로컬 저장소에도 저장
