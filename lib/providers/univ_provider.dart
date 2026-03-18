@@ -5,6 +5,7 @@ import 'package:bobmoo/collections/menu_cache_status.dart';
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/services/analytics_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -58,16 +59,31 @@ class UnivProvider extends ChangeNotifier {
     // 선택한 학교가 이전에 선택한 학교와 같다면? (변경 안함)
     if (_selectedUniversity == univ) {
       // 아무런 변화 없음
+      if (kDebugMode) {
+        debugPrint(
+          '[UnivProvider] setSelectedUniversity 스킵: 동일한 학교가 다시 선택됨 (id=${univ?.schoolId}, name=${univ?.schoolNameK})',
+        );
+      }
       return;
     }
 
     final isar = locator<Isar>();
+
+    if (kDebugMode) {
+      debugPrint(
+        '[UnivProvider] 학교 변경 감지: 기존 식단/캐시 데이터 초기화 시작 (meal, menuCacheStatus clear)',
+      );
+    }
 
     // 학교가 변경되면 기존의 모든 이전 학교의 식단 및 캐시 삭제
     await isar.writeTxn(() async {
       await isar.meals.clear();
       await isar.menuCacheStatuses.clear();
     });
+
+    if (kDebugMode) {
+      debugPrint('[UnivProvider] 기존 식단/캐시 데이터 초기화 완료');
+    }
 
     _selectedUniversity = univ;
 
