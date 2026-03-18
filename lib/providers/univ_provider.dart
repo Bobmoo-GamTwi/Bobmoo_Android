@@ -1,9 +1,12 @@
 import 'dart:convert';
 
+import 'package:bobmoo/collections/meal_collection.dart';
+import 'package:bobmoo/collections/menu_cache_status.dart';
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/services/analytics_service.dart';
 import 'package:flutter/material.dart';
+import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UnivProvider extends ChangeNotifier {
