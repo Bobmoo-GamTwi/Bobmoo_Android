@@ -52,6 +52,12 @@ class UnivProvider extends ChangeNotifier {
       _lastUnivColor = univ.hexToColor();
     }
 
+    // 선택한 학교가 이전에 선택한 학교와 같다면? (변경 안함)
+    if (_selectedUniversity == univ) {
+      // 아무런 변화 없음
+      return;
+    }
+
     final isar = locator<Isar>();
 
     // 학교가 변경되면 기존의 모든 이전 학교의 식단 및 캐시 삭제
