@@ -139,7 +139,7 @@ class _SettingsScreenState extends State<SettingsScreen>
           context,
         ).pushNamed<University?>(
           "/select_school",
-          arguments: {'allowBack': false, 'entryPoint': 'settings'},
+          arguments: {'allowBack': true, 'entryPoint': 'settings'},
         );
 
     if (!mounted) return;

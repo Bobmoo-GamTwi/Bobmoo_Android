@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:bobmoo/models/university.dart';
@@ -10,26 +11,35 @@ class SearchProvider extends ChangeNotifier {
   String _keyword = "";
 
   bool _isLoading = true;
+  SchoolLoadErrorState _errorState = SchoolLoadErrorState.none;
 
   final String _baseUrl = 'https://bobmoo.site/api/v1/schools';
+  static const Duration _requestTimeout = Duration(seconds: 5);
 
   // 1. 앱 시작 시 딱 한 번 호출해서 상태를 복원합니다.
   Future<void> init() async {
     final stopwatch = Stopwatch()..start();
+    _isLoading = true;
+    _errorState = SchoolLoadErrorState.none;
+    notifyListeners();
 
     try {
       _allItems = await _loadUniversities();
+      _errorState = SchoolLoadErrorState.none;
       AnalyticsService.instance.logSchoolListLoadResult(
         result: SchoolListLoadResult.success,
         schoolCount: _allItems.length,
         loadTimeMs: stopwatch.elapsedMilliseconds,
       );
     } catch (error) {
+      _errorState = error is TimeoutException
+          ? SchoolLoadErrorState.timeout
+          : SchoolLoadErrorState.other;
       AnalyticsService.instance.logSchoolListLoadResult(
         result: SchoolListLoadResult.failure,
         loadTimeMs: stopwatch.elapsedMilliseconds,
       );
-      rethrow;
+      _allItems = [];
     } finally {
       stopwatch.stop();
       _isLoading = false;
@@ -38,7 +48,9 @@ class SearchProvider extends ChangeNotifier {
   }
 
   Future<List<University>> _loadUniversities() async {
-    final response = await http.get(Uri.parse(_baseUrl));
+    final response = await http
+        .get(Uri.parse(_baseUrl))
+        .timeout(_requestTimeout);
 
     if (response.statusCode == 200) {
       // 성공하면, JSON 문자열을 Map<String, dynamic>으로 디코딩
@@ -62,6 +74,7 @@ class SearchProvider extends ChangeNotifier {
   }
 
   bool get isLoading => _isLoading;
+  SchoolLoadErrorState get errorState => _errorState;
 
   List<University> get filteredItems {
     // 키워드가 비어있다면 그대로 반환
@@ -76,3 +89,5 @@ class SearchProvider extends ChangeNotifier {
     }).toList();
   }
 }
+
+enum SchoolLoadErrorState { none, timeout, other }

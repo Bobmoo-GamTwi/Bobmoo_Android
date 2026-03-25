@@ -1,6 +1,7 @@
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/search_provider.dart';
 import 'package:bobmoo/services/analytics_service.dart';
+import 'package:bobmoo/ui/components/states/network_error_panel.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/ui/components/buttons/primary_button.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
@@ -70,7 +71,10 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final univs = context.select((SearchProvider p) => p.filteredItems);
+    final searchProvider = context.watch<SearchProvider>();
+    final univs = searchProvider.filteredItems;
+    final isSearchFailed =
+        searchProvider.errorState != SchoolLoadErrorState.none;
 
     return PopScope(
       canPop: widget.allowBack,
@@ -84,10 +88,15 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
               _buildSearchField(),
               SizedBox(height: 25.h),
 
-              _buildSearchResult(univs),
+              _buildSearchResult(
+                univs: univs,
+                searchProvider: searchProvider,
+              ),
               SizedBox(height: 27.h),
 
-              if (_selectedUniv != null) ...[
+              if (_selectedUniv != null &&
+                  !isSearchFailed &&
+                  !searchProvider.isLoading) ...[
                 PrimaryButton(
                   text: "선택완료",
                   onTap: () {
@@ -121,7 +130,10 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
     );
   }
 
-  Expanded _buildSearchResult(List<University> univs) {
+  Expanded _buildSearchResult({
+    required List<University> univs,
+    required SearchProvider searchProvider,
+  }) {
     return Expanded(
       child: Container(
         padding: EdgeInsets.symmetric(
@@ -136,55 +148,66 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "검색 결과 ${univs.length}",
-              style: AppTypography.search.b15,
-            ),
+            if (searchProvider.isLoading)
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (searchProvider.errorState != SchoolLoadErrorState.none)
+              Expanded(
+                child: NetworkErrorPanel(
+                  description:
+                      searchProvider.errorState == SchoolLoadErrorState.timeout
+                      ? "서버가 밥 먹다가 체했나 봐요 ㅠㅠ\n팀원들이 긴급 심폐소생술 중입니다!\n조금 있다가 다시 와주세요 🙏"
+                      : "학교 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+                  onRetry: () => context.read<SearchProvider>().init(),
+                ),
+              )
+            else ...[
+              Text("검색 결과 ${univs.length}", style: AppTypography.search.b15),
+              SizedBox(height: 10.h),
+              Expanded(
+                child: ListView.separated(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: univs.length,
+                  itemBuilder: (context, index) {
+                    final university = univs[index];
 
-            SizedBox(height: 10.h),
+                    return ListTile(
+                      contentPadding: EdgeInsets.symmetric(horizontal: 3.w),
+                      minTileHeight: 58.h,
+                      trailing: _selectedUniv == university
+                          ? Icon(Icons.check, size: 25.h)
+                          : null,
+                      iconColor: AppColors.colorGray3,
+                      title: Text(
+                        university.schoolNameK,
+                        style: AppTypography.search.b17,
+                      ),
+                      onTap: () {
+                        final nextUniv = _selectedUniv == university
+                            ? null
+                            : university;
+                        if (nextUniv != null) {
+                          AnalyticsService.instance.logSchoolSearchResultTap(
+                            schoolId: nextUniv.schoolId,
+                            resultRank: index + 1,
+                            entryPoint: _entryPoint,
+                          );
+                        }
 
-            Expanded(
-              child: ListView.separated(
-                physics: const BouncingScrollPhysics(),
-                itemCount: univs.length,
-                itemBuilder: (context, index) {
-                  final university = univs[index];
-
-                  return ListTile(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 3.w),
-                    minTileHeight: 58.h,
-                    trailing: _selectedUniv == university
-                        ? Icon(Icons.check, size: 25.h)
-                        : null,
-                    iconColor: AppColors.colorGray3,
-                    title: Text(
-                      university.schoolNameK,
-                      style: AppTypography.search.b17,
-                    ),
-                    onTap: () {
-                      final nextUniv = _selectedUniv == university
-                          ? null
-                          : university;
-                      if (nextUniv != null) {
-                        AnalyticsService.instance.logSchoolSearchResultTap(
-                          schoolId: nextUniv.schoolId,
-                          resultRank: index + 1,
-                          entryPoint: _entryPoint,
-                        );
-                      }
-
-                      setState(() {
-                        _selectedUniv = nextUniv;
-                      });
-                    },
-                  );
-                },
-                separatorBuilder: (context, index) => Divider(
-                  thickness: 1,
-                  color: AppColors.colorGray5,
+                        setState(() {
+                          _selectedUniv = nextUniv;
+                        });
+                      },
+                    );
+                  },
+                  separatorBuilder: (context, index) => Divider(
+                    thickness: 1,
+                    color: AppColors.colorGray5,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
