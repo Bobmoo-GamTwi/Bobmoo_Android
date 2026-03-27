@@ -12,6 +12,7 @@ import 'package:bobmoo/screens/home_analytics_helper.dart';
 import 'package:bobmoo/screens/home_widget_sync_helper.dart';
 import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/ui/components/states/network_error_panel.dart';
+import 'package:bobmoo/ui/components/states/status_content.dart';
 import 'package:bobmoo/ui/states/network_error_ui_mapper.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/utils/meal_utils.dart';
@@ -618,60 +619,47 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         color: AppColors.colorWhite,
         borderRadius: BorderRadius.circular(15.r),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // 아이콘
-          SvgPicture.asset(
-            'assets/icons/icon_bob.svg',
-            width: 60.w,
-          ),
-          SizedBox(height: 24.h),
-          // 제목
-          Text(
-            '등록된 식단이 없어요',
-            style: AppTypography.head.sb18,
-          ),
-          SizedBox(height: 21.h),
-          // 설명
-          Text(
-            '식단 정보가 등록되지 않았어요.',
-            textAlign: TextAlign.center,
-            style: AppTypography.search.sb15.copyWith(
-              color: AppColors.colorGray3,
-            ),
-          ),
-          SizedBox(
-            height: 4.h,
-          ),
-          Text(
-            '잠시 후 다시 확인해주세요.',
-            textAlign: TextAlign.center,
-            style: AppTypography.search.sb15.copyWith(
-              color: AppColors.colorGray3,
-            ),
-          ),
-          SizedBox(height: 118.h),
-          // 아래로 당겨 새로고침
-          Column(
-            children: [
-              Icon(
-                Icons.arrow_downward,
+      child: StatusContent(
+        icon: SvgPicture.asset(
+          'assets/icons/icon_bob.svg',
+          width: 60.w,
+        ),
+        title: '등록된 식단이 없어요',
+        description: Column(
+          children: [
+            Text(
+              '식단 정보가 등록되지 않았어요.',
+              textAlign: TextAlign.center,
+              style: AppTypography.search.sb15.copyWith(
                 color: AppColors.colorGray3,
-                size: 32.w,
               ),
-              SizedBox(
-                height: 7.h,
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              '잠시 후 다시 확인해주세요.',
+              textAlign: TextAlign.center,
+              style: AppTypography.search.sb15.copyWith(
+                color: AppColors.colorGray3,
               ),
-              Text(
-                "아래로 당겨 새로고침",
-                style: AppTypography.button.sb11.copyWith(
-                  color: AppColors.colorGray3,
-                ),
+            ),
+          ],
+        ),
+        bottom: Column(
+          children: [
+            Icon(
+              Icons.arrow_downward,
+              color: AppColors.colorGray3,
+              size: 32.w,
+            ),
+            SizedBox(height: 7.h),
+            Text(
+              "아래로 당겨 새로고침",
+              style: AppTypography.button.sb11.copyWith(
+                color: AppColors.colorGray3,
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
