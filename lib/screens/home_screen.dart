@@ -38,6 +38,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final MealRepository _repository = locator<MealRepository>();
   late final HomeWidgetSyncHelper _widgetSyncHelper;
   late Future<List<Meal>> _mealFuture;
+  UnivProvider? _univProvider;
+  VoidCallback? _univListener;
+  int? _lastKnownSchoolId;
   Object? _mealLoadError;
   DateTime? _lastWidgetUpdateAt;
   static const Duration _widgetUpdateMinInterval = Duration(seconds: 30);
@@ -84,6 +87,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// 위젯이 영구적으로 제거될때 호출
   @override
   void dispose() {
+    if (_univProvider != null && _univListener != null) {
+      _univProvider!.removeListener(_univListener!);
+    }
     // 옵저버 제거
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -104,12 +110,48 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
+    final provider = context.read<UnivProvider>();
+    // didChangeDependencies는 여러 번 호출될 수 있으므로,
+    // 동일 Provider 인스턴스에는 리스너를 중복 등록하지 않습니다.
+    if (_univProvider == provider) {
+      return;
+    }
+
+    // 상위 트리 재구성 등으로 Provider 인스턴스가 교체되면
+    // 기존 리스너를 해제한 뒤 새 인스턴스에 재등록합니다.
+    if (_univProvider != null && _univListener != null) {
+      _univProvider!.removeListener(_univListener!);
+    }
+
+    _univProvider = provider;
+    _lastKnownSchoolId = provider.selectedUniversity?.schoolId;
+    _univListener = _handleUniversityChanged;
+    _univProvider!.addListener(_univListener!);
+  }
+
+  void _handleUniversityChanged() {
+    if (!mounted) return;
+
+    final nextSchoolId = _univProvider?.selectedUniversity?.schoolId;
+    // 실제 학교가 바뀐 경우에만 재조회하고,
+    // 동일 schoolId 알림은 무시해 불필요한 호출을 막습니다.
+    if (nextSchoolId == _lastKnownSchoolId) {
+      return;
+    }
+    _lastKnownSchoolId = nextSchoolId;
+
     _analyticsHelper.setMealRequestContext(
       requestType: MealApiRequestType.universityChanged,
     );
+    // 학교 컨텍스트가 바뀌므로 empty/error 상태 노출 가드를 초기화합니다.
+    _analyticsHelper.resetStateExposureGuards();
 
-    _resetMealErrorState();
-    _mealFuture = _wrapMealFuture(_fetchData());
+    setState(() {
+      // 학교 변경 직후에는 새 학교의 오늘 식단을 기본 컨텍스트로 보여줍니다.
+      _selectedDate = DateUtils.dateOnly(DateTime.now());
+      _resetMealErrorState();
+      _mealFuture = _wrapMealFuture(_fetchData());
+    });
   }
 
   /// 인앱 업데이트를 확인하고, 가능하면 유연한 업데이트를 시작하는 함수
@@ -384,13 +426,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _mealFuture = _wrapMealFuture(
         _repository
             .forceRefreshMeals(_selectedDate)
-            .then((meals) {
+            .then((result) {
+              final meals = result.meals;
+              final dataSource = _toAnalyticsDataSource(result.dataSource);
               if (schoolId != null) {
                 AnalyticsService.instance.logMealApiRequest(
                   schoolId: schoolId,
                   mealDate: mealDate,
                   requestType: MealApiRequestType.userPullToRefresh,
-                  dataSource: AnalyticsDataSource.apiFetched,
+                  dataSource: dataSource,
                   triggerSource: AnalyticsTriggerSource.foreground,
                   result: MealApiResult.success,
                 );
@@ -400,47 +444,48 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   dateOffset: _analyticsHelper.dateOffsetFromToday(
                     _selectedDate,
                   ),
-                  dataSource: AnalyticsDataSource.apiFetched,
+                  dataSource: dataSource,
                   mealCount: meals.length,
                 );
               }
               return meals;
             })
-            .catchError((e) async {
-              // 1. API 호출이 실패하면 (SocketException, TimeoutException 등)
-              if (_isNetworkLikeError(e)) {
-                // 2. 로컬 DB에 저장된 데이터라도 있는지 확인합니다.
-                final localData = await _repository.fetchFromDb(_selectedDate);
-                if (localData.isNotEmpty) {
-                  if (schoolId != null) {
-                    AnalyticsService.instance.logMealApiRequest(
-                      schoolId: schoolId,
-                      mealDate: mealDate,
-                      requestType: MealApiRequestType.userPullToRefresh,
-                      dataSource: AnalyticsDataSource.dbStaleFallback,
-                      triggerSource: AnalyticsTriggerSource.foreground,
-                      result: MealApiResult.staleData,
-                    );
-                    AnalyticsService.instance.logViewMeal(
-                      schoolId: schoolId,
-                      mealDate: mealDate,
-                      dateOffset: _analyticsHelper.dateOffsetFromToday(
-                        _selectedDate,
-                      ),
-                      dataSource: AnalyticsDataSource.dbStaleFallback,
-                      mealCount: localData.length,
-                    );
-                  }
-                  // 3a. 로컬 데이터가 있으면, SnackBar를 띄우고 그 데이터를 반환합니다.
-                  _showStaleDataSnackbar(
-                    StaleDataException(
-                      localData,
-                      message: "새로고침에 실패했습니다. 오프라인 정보를 표시합니다.",
-                    ),
+            .catchError((e) {
+              if (e is StaleDataException) {
+                // API는 실패했지만 DB의 오래된 데이터는 사용 가능한 케이스입니다.
+                // stale 데이터 출처로 기록하고 사용자에게 안내 후 데이터를 유지합니다.
+                if (schoolId != null) {
+                  AnalyticsService.instance.logMealApiRequest(
+                    schoolId: schoolId,
+                    mealDate: mealDate,
+                    requestType: MealApiRequestType.userPullToRefresh,
+                    dataSource: _toAnalyticsDataSource(e.dataSource),
+                    triggerSource: AnalyticsTriggerSource.foreground,
+                    result: MealApiResult.staleData,
                   );
-                  return localData;
+                  AnalyticsService.instance.logViewMeal(
+                    schoolId: schoolId,
+                    mealDate: mealDate,
+                    dateOffset: _analyticsHelper.dateOffsetFromToday(
+                      _selectedDate,
+                    ),
+                    dataSource: _toAnalyticsDataSource(e.dataSource),
+                    mealCount: e.staleData.length,
+                  );
                 }
+                _showStaleDataSnackbar(
+                  StaleDataException(
+                    e.staleData,
+                    message: "새로고침에 실패했습니다. 오프라인 정보를 표시합니다.",
+                    dataSource: e.dataSource,
+                  ),
+                );
+                return e.staleData;
+              }
 
+              if (_isNetworkLikeError(e)) {
+                // stale fallback도 없는 순수 네트워크 실패입니다.
+                // 화면에서 의미 있는 오류 UI를 표시할 수 있도록 예외를 변환합니다.
                 if (schoolId != null) {
                   AnalyticsService.instance.logMealApiRequest(
                     schoolId: schoolId,
@@ -450,7 +495,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     result: MealApiResult.networkError,
                   );
                 }
-                // 3b. 로컬 데이터조차 없으면 에러 화면을 보여줍니다.
                 if (_isTimeoutError(e)) {
                   throw const RequestTimeoutException();
                 }
