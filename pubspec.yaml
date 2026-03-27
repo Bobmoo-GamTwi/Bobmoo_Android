@@ -3,7 +3,7 @@ description: "A new Flutter project."
 publish_to: 'none'
 
 # 버전 설정 versionName+versionCode
-version: 3.0.2+18
+version: 3.0.3+19
 
 environment:
   sdk: ^3.9.2

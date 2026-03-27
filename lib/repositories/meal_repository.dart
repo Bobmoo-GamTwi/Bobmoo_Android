@@ -10,15 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// --- Custom Exceptions ---
-/// 네트워크 오류를 위한 Exception
-class NetworkException implements Exception {
-  final String message;
-  NetworkException({
-    this.message = "인터넷 연결을 확인해주세요.",
-  });
-}
-
 /// API 호출 실패 시 오래된(Stale) 데이터를 전달하기 위한 Exception
 class StaleDataException implements Exception {
   final List<Meal> staleData;
@@ -236,7 +227,10 @@ class MealRepository {
       // 기존 Meal 데이터는 유지하고, cacheStatus만 제거해 다음 진입 시 API를 다시 호출하게 합니다.
       if (newMeals.isEmpty) {
         isEmptyResponse = true;
-        await isar.menuCacheStatuses.filter().dateEqualTo(responseDate).deleteAll();
+        await isar.menuCacheStatuses
+            .filter()
+            .dateEqualTo(responseDate)
+            .deleteAll();
         return;
       }
 

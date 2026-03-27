@@ -1,10 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:bobmoo/core/exceptions/network_exceptions.dart';
 import 'package:bobmoo/models/menu_model.dart';
 import 'package:http/http.dart' as http;
 
 class MenuService {
   // API의 기본 URL
   final String _baseUrl = 'https://bobmoo.site/api/v1/menu';
+  static const Duration _requestTimeout = Duration(seconds: 5);
 
   // 날짜를 인자로 받아 해당 날짜의 메뉴를 가져오는 함수
   Future<MenuResponse> getMenu(
@@ -19,9 +24,14 @@ class MenuService {
       _baseUrl,
     ).replace(queryParameters: {'date': formattedDate, 'school': schoolNameK});
 
-    final response = await http.get(
-      uri,
-    );
+    late final http.Response response;
+    try {
+      response = await http.get(uri).timeout(_requestTimeout);
+    } on TimeoutException {
+      throw const RequestTimeoutException();
+    } on SocketException {
+      throw const NoConnectivityException();
+    }
 
     if (response.statusCode == 200) {
       // 성공하면, JSON 문자열을 Map<String, dynamic>으로 디코딩
@@ -30,9 +40,8 @@ class MenuService {
       );
       // Map을 MenuResponse 객체로 변환하여 반환 (이 변환 로직은 모델 클래스에 만드는 것이 좋음)
       return MenuResponse.fromJson(jsonResponse);
-    } else {
-      // 실패하면 에러 발생
-      throw Exception('Failed to load menu');
     }
+
+    throw HttpStatusException(response.statusCode);
   }
 }
