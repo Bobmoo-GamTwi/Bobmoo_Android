@@ -2,6 +2,7 @@ import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/search_provider.dart';
 import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/ui/components/states/network_error_panel.dart';
+import 'package:bobmoo/ui/states/network_error_ui_mapper.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/ui/components/buttons/primary_button.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
@@ -73,8 +74,8 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
   Widget build(BuildContext context) {
     final searchProvider = context.watch<SearchProvider>();
     final univs = searchProvider.filteredItems;
-    final isSearchFailed =
-        searchProvider.errorState != SchoolLoadErrorState.none;
+    final schoolListLoadError = searchProvider.schoolListLoadError;
+    final isSearchFailed = schoolListLoadError != null;
 
     return PopScope(
       canPop: widget.allowBack,
@@ -134,6 +135,8 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
     required List<University> univs,
     required SearchProvider searchProvider,
   }) {
+    final schoolListLoadError = searchProvider.schoolListLoadError;
+
     return Expanded(
       child: Container(
         padding: EdgeInsets.symmetric(
@@ -152,15 +155,17 @@ class _SelectSchoolScreenState extends State<SelectSchoolScreen> {
               const Expanded(
                 child: Center(child: CircularProgressIndicator()),
               )
-            else if (searchProvider.errorState != SchoolLoadErrorState.none)
+            else if (schoolListLoadError != null)
               Expanded(
-                child: NetworkErrorPanel(
-                  description:
-                      searchProvider.errorState == SchoolLoadErrorState.timeout
-                      ? "서버가 밥 먹다가 체했나 봐요 ㅠㅠ\n팀원들이 긴급 심폐소생술 중입니다!\n조금 있다가 다시 와주세요 🙏"
-                      : "학교 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
-                  onRetry: () => context.read<SearchProvider>().init(),
-                ),
+                child: () {
+                  final ui = NetworkErrorUiMapper.toUiModel(schoolListLoadError);
+                  return NetworkErrorPanel(
+                    description: ui.description,
+                    icon: ui.icon,
+                    actionLabel: ui.actionLabel,
+                    onRetry: () => context.read<SearchProvider>().init(),
+                  );
+                }(),
               )
             else ...[
               Text("검색 결과 ${univs.length}", style: AppTypography.search.b15),

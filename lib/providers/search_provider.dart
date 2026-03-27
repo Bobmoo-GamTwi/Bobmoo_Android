@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:bobmoo/core/exceptions/network_exceptions.dart';
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/services/analytics_service.dart';
 import 'package:flutter/widgets.dart';
@@ -11,7 +13,7 @@ class SearchProvider extends ChangeNotifier {
   String _keyword = "";
 
   bool _isLoading = true;
-  SchoolLoadErrorState _errorState = SchoolLoadErrorState.none;
+  Object? _schoolListLoadError;
 
   final String _baseUrl = 'https://bobmoo.site/api/v1/schools';
   static const Duration _requestTimeout = Duration(seconds: 5);
@@ -20,21 +22,19 @@ class SearchProvider extends ChangeNotifier {
   Future<void> init() async {
     final stopwatch = Stopwatch()..start();
     _isLoading = true;
-    _errorState = SchoolLoadErrorState.none;
+    _schoolListLoadError = null;
     notifyListeners();
 
     try {
       _allItems = await _loadUniversities();
-      _errorState = SchoolLoadErrorState.none;
+      _schoolListLoadError = null;
       AnalyticsService.instance.logSchoolListLoadResult(
         result: SchoolListLoadResult.success,
         schoolCount: _allItems.length,
         loadTimeMs: stopwatch.elapsedMilliseconds,
       );
     } catch (error) {
-      _errorState = error is TimeoutException
-          ? SchoolLoadErrorState.timeout
-          : SchoolLoadErrorState.other;
+      _schoolListLoadError = error;
       AnalyticsService.instance.logSchoolListLoadResult(
         result: SchoolListLoadResult.failure,
         loadTimeMs: stopwatch.elapsedMilliseconds,
@@ -48,9 +48,14 @@ class SearchProvider extends ChangeNotifier {
   }
 
   Future<List<University>> _loadUniversities() async {
-    final response = await http
-        .get(Uri.parse(_baseUrl))
-        .timeout(_requestTimeout);
+    late final http.Response response;
+    try {
+      response = await http.get(Uri.parse(_baseUrl)).timeout(_requestTimeout);
+    } on TimeoutException {
+      throw const RequestTimeoutException();
+    } on SocketException {
+      throw const NoConnectivityException();
+    }
 
     if (response.statusCode == 200) {
       // 성공하면, JSON 문자열을 Map<String, dynamic>으로 디코딩
@@ -61,10 +66,9 @@ class SearchProvider extends ChangeNotifier {
       return jsonSchoolList
           .map((json) => University.fromJson(json as Map<String, dynamic>))
           .toList();
-    } else {
-      // 실패하면 에러 발생
-      throw Exception('Failed to load menu');
     }
+
+    throw HttpStatusException(response.statusCode);
   }
 
   void updateKeyword(String keyword) {
@@ -74,7 +78,7 @@ class SearchProvider extends ChangeNotifier {
   }
 
   bool get isLoading => _isLoading;
-  SchoolLoadErrorState get errorState => _errorState;
+  Object? get schoolListLoadError => _schoolListLoadError;
 
   List<University> get filteredItems {
     // 키워드가 비어있다면 그대로 반환
@@ -89,5 +93,3 @@ class SearchProvider extends ChangeNotifier {
     }).toList();
   }
 }
-
-enum SchoolLoadErrorState { none, timeout, other }

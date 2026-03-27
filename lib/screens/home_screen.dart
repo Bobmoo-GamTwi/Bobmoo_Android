@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bobmoo/collections/meal_collection.dart';
+import 'package:bobmoo/core/exceptions/network_exceptions.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/models/meal_by_cafeteria.dart';
@@ -11,6 +12,7 @@ import 'package:bobmoo/screens/home_analytics_helper.dart';
 import 'package:bobmoo/screens/home_widget_sync_helper.dart';
 import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/ui/components/states/network_error_panel.dart';
+import 'package:bobmoo/ui/states/network_error_ui_mapper.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
 import 'package:bobmoo/utils/meal_utils.dart';
 import 'package:bobmoo/ui/components/cards/time_grouped_card.dart';
@@ -219,11 +221,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             result: MealApiResult.networkError,
           );
         }
-        // 네트워크/타임아웃 계열 오류는 사용자 메시지를 분리합니다.
-        if (_isTimeoutError(e)) {
-          throw TimeoutNetworkException();
-        }
-        throw NetworkException();
+        // 네트워크/타임아웃 계열 오류는 의미 타입으로 변환합니다.
+        if (_isTimeoutError(e)) throw const RequestTimeoutException();
+        throw const NoConnectivityException();
       }
       if (schoolId != null) {
         AnalyticsService.instance.logMealApiRequest(
@@ -320,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   bool _isTimeoutError(Object error) =>
-      error is TimeoutException || error is TimeoutNetworkException;
+      error is TimeoutException || error is RequestTimeoutException;
 
   bool _isNetworkLikeError(Object error) =>
       error is SocketException ||
@@ -461,9 +461,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 }
                 // 3b. 로컬 데이터조차 없으면 에러 화면을 보여줍니다.
                 if (_isTimeoutError(e)) {
-                  throw TimeoutNetworkException();
+                  throw const RequestTimeoutException();
                 }
-                throw NetworkException();
+                throw const NoConnectivityException();
               }
 
               if (schoolId != null) {
@@ -475,7 +475,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   result: MealApiResult.unknownError,
                 );
               }
-              throw NetworkException();
+              throw const UnknownNetworkException();
             }),
       );
     });
@@ -590,20 +590,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   /// 에러 상황에 맞는 위젯을 생성하는 함수
   Widget _buildErrorWidget(Object error) {
-    String message;
-
-    // 에러 확인
-    if (error is NetworkException) {
-      message = error.message;
-    } else {
-      message = "알 수 없는 오류가 발생했습니다.";
-    }
+    final ui = NetworkErrorUiMapper.toUiModel(error);
 
     return NetworkErrorPanel(
-      description: message,
-      icon: error is NetworkException
-          ? Icons.wifi_off_rounded
-          : Icons.error_outline_rounded,
+      description: ui.description,
+      icon: ui.icon,
+      actionLabel: ui.actionLabel,
       onRetry: () {
         final schoolId = _currentSchoolId;
         if (schoolId != null) {

@@ -1,4 +1,4 @@
-import 'package:bobmoo/repositories/meal_repository.dart';
+import 'package:bobmoo/core/exceptions/network_exceptions.dart';
 import 'package:bobmoo/services/analytics_service.dart';
 import 'package:intl/intl.dart';
 

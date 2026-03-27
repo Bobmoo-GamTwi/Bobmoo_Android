@@ -10,22 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// --- Custom Exceptions ---
-/// 네트워크 오류를 위한 Exception
-class NetworkException implements Exception {
-  final String message;
-  NetworkException({
-    this.message = "인터넷 연결을 확인해주세요.",
-  });
-}
-
-class TimeoutNetworkException extends NetworkException {
-  TimeoutNetworkException({
-    super.message =
-        "서버가 밥 먹다가 체했나 봐요 ㅠㅠ\n팀원들이 긴급 심폐소생술 중입니다!\n조금 있다가 다시 와주세요 🙏",
-  });
-}
-
 /// API 호출 실패 시 오래된(Stale) 데이터를 전달하기 위한 Exception
 class StaleDataException implements Exception {
   final List<Meal> staleData;
