@@ -25,7 +25,10 @@ class NetworkErrorUiMapper {
     return ErrorUiModel(
       description: description,
       icon: switch (exception) {
-        NetworkException() => Icons.wifi_off_rounded,
+        RequestTimeoutException() => Icons.schedule_rounded,
+        NoConnectivityException() => Icons.wifi_off_rounded,
+        HttpStatusException() => Icons.cloud_off_rounded,
+        NetworkException() => Icons.error_outline_rounded,
         _ => Icons.error_outline_rounded,
       },
       actionLabel: "다시 한 번 찔러보기",

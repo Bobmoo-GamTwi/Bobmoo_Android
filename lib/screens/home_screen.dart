@@ -347,16 +347,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
-  void _retryMeals() {
-    _analyticsHelper.setMealRequestContext(
-      requestType: MealApiRequestType.retry,
-    );
-    setState(() {
-      _resetMealErrorState();
-      _mealFuture = _wrapMealFuture(_fetchData());
-    });
-  }
-
   void _changeSelectedDateByDays(int days) {
     final previousDate = _selectedDate;
     final nextDate = _selectedDate.add(Duration(days: days));
@@ -597,17 +587,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       description: ui.description,
       icon: ui.icon,
       actionLabel: ui.actionLabel,
-      onRetry: () {
-        final schoolId = _currentSchoolId;
-        if (schoolId != null) {
-          AnalyticsService.instance.logMealRetryTap(
-            schoolId: schoolId,
-            mealDate: _analyticsHelper.toDateKey(_selectedDate),
-            previousErrorType: _analyticsHelper.errorTypeOf(error),
-          );
-        }
-        _retryMeals();
-      },
+      showCard: true,
+      showPullToRefreshHint: true,
+      onRetry: null,
     );
   }
 
