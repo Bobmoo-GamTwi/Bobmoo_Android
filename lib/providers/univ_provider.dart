@@ -1,13 +1,11 @@
 import 'dart:convert';
 
-import 'package:bobmoo/collections/meal_collection.dart';
-import 'package:bobmoo/collections/menu_cache_status.dart';
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/models/university.dart';
+import 'package:bobmoo/repositories/meal_repository.dart';
 import 'package:bobmoo/services/analytics_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UnivProvider extends ChangeNotifier {
@@ -67,22 +65,17 @@ class UnivProvider extends ChangeNotifier {
       return;
     }
 
-    final isar = locator<Isar>();
-
     if (kDebugMode) {
       debugPrint(
-        '[UnivProvider] 학교 변경 감지: 기존 식단/캐시 데이터 초기화 시작 (meal, menuCacheStatus clear)',
+        '[UnivProvider] 학교 변경 감지: Repository를 통해 식단/캐시 무효화 시작',
       );
     }
 
-    // 학교가 변경되면 기존의 모든 이전 학교의 식단 및 캐시 삭제
-    await isar.writeTxn(() async {
-      await isar.meals.clear();
-      await isar.menuCacheStatuses.clear();
-    });
+    // 캐시 정책 책임은 Repository로 위임합니다.
+    await locator<MealRepository>().onSchoolChanged();
 
     if (kDebugMode) {
-      debugPrint('[UnivProvider] 기존 식단/캐시 데이터 초기화 완료');
+      debugPrint('[UnivProvider] Repository 캐시 무효화 완료');
     }
 
     _selectedUniversity = univ;
