@@ -39,6 +39,8 @@ dependencies:
   provider: ^6.1.5+1
   url_launcher: ^6.3.1
   device_info_plus: ^12.3.0
+  flutter_dotenv: ^6.0.0
+  amplitude_flutter: ^4.5.0
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +60,7 @@ flutter:
   default-flavor: prod
 
   assets:
+    - .env
     - assets/icons/
     - assets/fonts/
     
