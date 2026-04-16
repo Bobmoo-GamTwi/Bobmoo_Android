@@ -1,8 +1,13 @@
 import 'dart:async';
 
+import 'package:amplitude_flutter/amplitude.dart';
+import 'package:amplitude_flutter/configuration.dart';
+import 'package:amplitude_flutter/events/base_event.dart';
+import 'package:amplitude_flutter/events/identify.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 enum AppGateDestinationRoute {
   home('/home'),
@@ -96,6 +101,9 @@ class AnalyticsService {
   AnalyticsService._();
 
   static final AnalyticsService instance = AnalyticsService._();
+
+  // Amplitude 인스턴스 추가
+  Amplitude? _amplitude;
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
   bool _isInitialized = false;
 
@@ -116,6 +124,7 @@ class AnalyticsService {
     if (_isInitialized) return;
     _isInitialized = true;
 
+    // Firebase 초기화
     try {
       await _analytics.setDefaultEventParameters({
         'env': environment,
@@ -126,7 +135,34 @@ class AnalyticsService {
       );
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('[Analytics] initialize failed: $error');
+        debugPrint('[Analytics] Firebase initialize failed: $error');
+      }
+    }
+
+    // Amplitude & dotenv 초기화
+    try {
+      // pubspec.yaml에 assets: - .env 추가 필수!
+      await dotenv.load(fileName: ".env");
+      String? amplitudeKey = dotenv.env['AMPLITUDE_API_KEY'];
+
+      if (amplitudeKey != null && amplitudeKey.isNotEmpty) {
+        _amplitude = Amplitude(
+          Configuration(
+            apiKey: amplitudeKey,
+          ),
+        );
+        await _amplitude!.isBuilt;
+
+        final identify = Identify()..set('env', environment);
+        await _amplitude!.identify(identify);
+      } else {
+        if (kDebugMode) {
+          debugPrint('[Analytics] AMPLITUDE_API_KEY is missing in .env');
+        }
+      }
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[Analytics] Amplitude initialize failed: $error');
       }
     }
   }
@@ -387,7 +423,7 @@ class AnalyticsService {
     parameters.forEach((key, value) {
       if (value == null) return;
 
-      if (value is String || value is int || value is double || value is bool) {
+      if (value is String || value is int || value is double) {
         normalized[key] = value;
         return;
       }
@@ -402,11 +438,29 @@ class AnalyticsService {
     required String name,
     required Map<String, Object> parameters,
   }) async {
+    // 1. Firebase 전송
     try {
       await _analytics.logEvent(name: name, parameters: parameters);
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('[Analytics] logEvent failed: $name, error: $error');
+        debugPrint(
+          '[Analytics] Firebase logEvent failed: $name, error: $error',
+        );
+      }
+    }
+
+    // 2. Amplitude 전송
+    final amplitude = _amplitude;
+    if (amplitude == null) return;
+    try {
+      await amplitude.track(
+        BaseEvent(name, eventProperties: parameters),
+      );
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint(
+          '[Analytics] Amplitude logEvent failed: $name, error: $error',
+        );
       }
     }
   }
