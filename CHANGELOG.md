@@ -2,6 +2,15 @@
 
 이 프로젝트의 모든 변경사항은 이 파일에 기록됩니다.
 
+## [3.0.5] - 2026-04-18
+
+### Fixed
+- background_workmanager 트리거 이벤트를 Amplitude에서 out-of-session(`session_id=-1`)으로 전송하도록 수정
+- 백그라운드 `widget_sync` 단독 실행 시 불필요하게 생성되던 세션 노이즈를 완화
+
+### Changed
+- `AnalyticsService`의 Amplitude 전송 로직에 background trigger 기반 세션 분기 처리 추가
+
 ## [3.0.4] - 2026-04-16
 
 ### Added
