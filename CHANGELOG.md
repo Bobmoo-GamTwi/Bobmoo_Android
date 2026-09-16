@@ -2,6 +2,29 @@
 
 이 프로젝트의 모든 변경사항은 이 파일에 기록됩니다.
 
+## [3.0.5] - 2026-04-18
+
+### Fixed
+- background_workmanager 트리거 이벤트를 Amplitude에서 out-of-session(`session_id=-1`)으로 전송하도록 수정
+- 백그라운드 `widget_sync` 단독 실행 시 불필요하게 생성되던 세션 노이즈를 완화
+
+### Changed
+- `AnalyticsService`의 Amplitude 전송 로직에 background trigger 기반 세션 분기 처리 추가
+
+## [3.0.4] - 2026-04-16
+
+### Added
+- Amplitude 기반 추가 분석 이벤트 전송을 도입하고, `flutter_dotenv`로 API 키를 주입하도록 개선
+
+### Fixed
+- 학교 변경 시 캐시 무효화/즉시 재조회 흐름을 정리해 식단 갱신 정확도를 향상
+- pull-to-refresh 분석의 `data_source`가 실제 fetch 결과를 반영하도록 수정
+- 홈/학교선택 네트워크 예외 및 에러 UI 표시 흐름을 정리
+
+### Changed
+- 식단 조회 정책을 `MealRepository#getMealsForDateWithSource(..., forceRefresh)` 중심으로 정리
+- 학교 변경 시 캐시 무효화 책임을 `MealRepository`로 위임
+
 ## [3.0.3] - 2026-03-26
 
 ### Fixed

@@ -106,6 +106,8 @@ class AnalyticsService {
   Amplitude? _amplitude;
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
   bool _isInitialized = false;
+  static const String _backgroundTriggerSource = 'background_workmanager';
+  static const int _outOfSessionId = -1;
 
   String get environment {
     switch (appFlavor) {
@@ -452,10 +454,20 @@ class AnalyticsService {
     // 2. Amplitude 전송
     final amplitude = _amplitude;
     if (amplitude == null) return;
+    final isBackgroundTriggered =
+        parameters['trigger_source'] == _backgroundTriggerSource;
     try {
       await amplitude.track(
-        BaseEvent(name, eventProperties: parameters),
+        BaseEvent(
+          name,
+          eventProperties: parameters,
+          // outOfSession 대체: background 이벤트는 session_id=-1로 전송
+          sessionId: isBackgroundTriggered ? _outOfSessionId : null,
+        ),
       );
+      if (kDebugMode && isBackgroundTriggered) {
+        debugPrint('[Analytics] Amplitude out-of-session applied: $name');
+      }
     } catch (error) {
       if (kDebugMode) {
         debugPrint(
