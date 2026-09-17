@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:bobmoo/collections/meal_collection.dart';
 import 'package:bobmoo/collections/menu_cache_status.dart';
 import 'package:bobmoo/collections/restaurant_collection.dart';
+import 'package:bobmoo/constants/storage_keys.dart';
 import 'package:bobmoo/models/menu_model.dart';
 import 'package:bobmoo/services/menu_service.dart';
 import 'package:flutter/foundation.dart';
@@ -165,7 +166,7 @@ class MealRepository {
 
   String _resolveSchoolNameK() {
     try {
-      final jsonString = prefs.getString('selectedUniv');
+      final jsonString = prefs.getString(LocalStorageKeys.selectedUniv);
       if (jsonString == null || jsonString.isEmpty) {
         return _fallbackSchoolNameK;
       }

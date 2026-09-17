@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bobmoo/constants/storage_keys.dart';
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/repositories/meal_repository.dart';
@@ -20,7 +21,7 @@ class UnivProvider extends ChangeNotifier {
   // 1. 앱 시작 시 딱 한 번 호출해서 상태를 복원합니다.
   Future<void> init() async {
     final prefs = locator<SharedPreferences>();
-    String? jsonString = prefs.getString('selectedUniv');
+    String? jsonString = prefs.getString(LocalStorageKeys.selectedUniv);
 
     if (jsonString != null) {
       try {
@@ -35,7 +36,7 @@ class UnivProvider extends ChangeNotifier {
         }
         // 필수 데이터 없으면 그냥 null 유지 → 학교 선택 화면으로 감
       } catch (e) {
-        await prefs.remove('selectedUniv'); // 깨진 데이터 삭제
+        await prefs.remove(LocalStorageKeys.selectedUniv); // 깨진 데이터 삭제
       }
     }
 
@@ -83,9 +84,12 @@ class UnivProvider extends ChangeNotifier {
     // 로컬 저장소에도 저장
     final prefs = locator<SharedPreferences>();
     if (univ != null) {
-      await prefs.setString('selectedUniv', jsonEncode(univ.toJson()));
+      await prefs.setString(
+        LocalStorageKeys.selectedUniv,
+        jsonEncode(univ.toJson()),
+      );
     } else {
-      await prefs.remove('selectedUniv');
+      await prefs.remove(LocalStorageKeys.selectedUniv);
     }
 
     await AnalyticsService.instance.setSelectedSchoolUserProperty(

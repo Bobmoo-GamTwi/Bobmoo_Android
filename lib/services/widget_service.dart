@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'package:bobmoo/constants/app_constants.dart';
+import 'package:bobmoo/constants/storage_keys.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:bobmoo/models/all_cafeterias_widget_data.dart';
 
 class WidgetService {
-  static const String _widgetDataKey = 'widgetData';
-
   static Future<void> refreshAllWidgets() async {
     await HomeWidget.updateWidget(
       qualifiedAndroidName: mealWidgetReceiverClassName,
@@ -20,7 +19,10 @@ class WidgetService {
     AllCafeteriasWidgetData data,
   ) async {
     final jsonString = jsonEncode(data.toJson());
-    await HomeWidget.saveWidgetData<String>(_widgetDataKey, jsonString);
+    await HomeWidget.saveWidgetData<String>(
+      WidgetStorageKeys.widgetData,
+      jsonString,
+    );
     await refreshAllWidgets();
   }
 }

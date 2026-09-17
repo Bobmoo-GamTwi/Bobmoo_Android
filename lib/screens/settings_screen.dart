@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bobmoo/constants/storage_keys.dart';
 import 'package:bobmoo/ui/components/cards/setting_section_card.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/university.dart';
@@ -70,7 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   Future<void> _loadSelectedCafeteria() async {
     // SharedPreferences 대신 HomeWidget에서 데이터를 직접 읽어옵니다.
     final storedName = await HomeWidget.getWidgetData<String>(
-      'selectedCafeteriaName',
+      WidgetStorageKeys.selectedCafeteriaName,
       defaultValue: _cafeteriaList.first,
     );
     // mounted 체크 추가
@@ -91,7 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen>
 
     // SharedPreferences 대신 HomeWidget을 사용하여 데이터를 저장합니다.
     await HomeWidget.saveWidgetData<String>(
-      'selectedCafeteriaName',
+      WidgetStorageKeys.selectedCafeteriaName,
       cafeteriaName,
     );
 
