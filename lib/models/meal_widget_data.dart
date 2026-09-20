@@ -1,3 +1,4 @@
+import 'package:bobmoo/models/meal_by_cafeteria.dart';
 import 'package:bobmoo/models/menu_model.dart';
 
 /// 위젯에 전달할 경량 데이터 모델
@@ -38,18 +39,20 @@ class MealWidgetData {
   factory MealWidgetData.fromGrouped({
     required String date,
     required String cafeteriaName,
-    required Map<String, List<dynamic>> grouped, // MealByCafeteria 유사 구조
+    required Map<String, List<MealByCafeteria>> grouped,
     required Hours hours,
   }) {
     List<MealItem> pick(String key) {
-      final list = grouped[key] ?? const [];
-      final found = list.cast<dynamic>().firstWhere(
-        (e) => e != null && (e as dynamic).cafeteriaName == cafeteriaName,
-        orElse: () => null,
-      );
-      if (found == null) return <MealItem>[];
-      final meals = (found as dynamic).meals as List<MealItem>;
-      return meals;
+      final list = grouped[key];
+      if (list == null) return [];
+
+      for (final mealByCafeteria in list) {
+        if (mealByCafeteria.cafeteriaName == cafeteriaName) {
+          return mealByCafeteria.meals;
+        }
+      }
+
+      return [];
     }
 
     return MealWidgetData(

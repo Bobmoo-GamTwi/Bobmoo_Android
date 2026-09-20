@@ -3,13 +3,13 @@ import 'dart:io';
 
 import 'package:bobmoo/collections/meal_collection.dart';
 import 'package:bobmoo/core/exceptions/network_exceptions.dart';
+import 'package:bobmoo/services/widget_update_service.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/models/meal_by_cafeteria.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/repositories/meal_repository.dart';
 import 'package:bobmoo/screens/home_analytics_helper.dart';
-import 'package:bobmoo/screens/home_widget_sync_helper.dart';
 import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/ui/components/states/network_error_panel.dart';
 import 'package:bobmoo/ui/components/states/status_content.dart';
@@ -36,15 +36,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final MealRepository _repository = locator<MealRepository>();
-  late final HomeWidgetSyncHelper _widgetSyncHelper;
   late Future<List<Meal>> _mealFuture;
   UnivProvider? _univProvider;
   VoidCallback? _univListener;
   int? _lastKnownSchoolId;
   Object? _mealLoadError;
-  DateTime? _lastWidgetUpdateAt;
-  static const Duration _widgetUpdateMinInterval = Duration(seconds: 30);
-  bool _isWidgetUpdateInProgress = false;
 
   /// 선택한 날짜 저장할 상태 변수
   DateTime _selectedDate = DateTime.now();
@@ -74,7 +70,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    _widgetSyncHelper = HomeWidgetSyncHelper(repository: _repository);
     // 앱 상태를 확인하기 위한 옵저버 할당
     WidgetsBinding.instance.addObserver(this);
     // 앱 시작 시 업데이트 확인
@@ -102,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     // 앱이 포그라운드로 돌아올 때마다 위젯 업데이트
     if (state == AppLifecycleState.resumed) {
-      _updateWidgetOnly();
+      WidgetUpdateService.updateWidget();
     }
   }
 
@@ -198,35 +193,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final schoolId = _currentSchoolId;
 
     try {
-      final fetchResult = await _repository.getMealsForDateWithSource(
-        _selectedDate,
-      );
-      final meals = fetchResult.meals;
-      final dataSource = _toAnalyticsDataSource(fetchResult.dataSource);
+      final meals = await _repository.getMealsForDate(_selectedDate);
 
-      if (schoolId != null) {
-        AnalyticsService.instance.logMealApiRequest(
-          schoolId: schoolId,
-          mealDate: mealDate,
-          requestType: requestContext.requestType,
-          changeSource: requestContext.changeSource,
-          dataSource: dataSource,
-          triggerSource: AnalyticsTriggerSource.foreground,
-          result: MealApiResult.success,
-        );
-        AnalyticsService.instance.logViewMeal(
-          schoolId: schoolId,
-          mealDate: mealDate,
-          dateOffset: _analyticsHelper.dateOffsetFromToday(_selectedDate),
-          dataSource: dataSource,
-          mealCount: meals.length,
-        );
-      }
-
-      // 위젯은 "오늘" 데이터만 사용합니다. 오늘 데이터가 있으면 재조회 없이 재사용합니다.
-      _updateWidgetOnly(
-        todayMeals: _isSameDay(_selectedDate, DateTime.now()) ? meals : null,
-      );
+      // 위젯 업데이트 실행
+      WidgetUpdateService.updateWidget();
 
       return meals;
     } catch (e) {
@@ -281,71 +251,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       // 다른 모든 에러는 FutureBuilder로 전달
       rethrow;
     }
-  }
-
-  /// 위젯 데이터 업데이트 함수 (오늘날짜)
-  Future<void> _updateWidgetOnly({List<Meal>? todayMeals}) async {
-    final schoolId = _currentSchoolId;
-    if (_isWidgetUpdateInProgress) {
-      AnalyticsService.instance.logWidgetSync(
-        schoolId: schoolId,
-        triggerSource: AnalyticsTriggerSource.foreground,
-        result: WidgetSyncResult.skippedInProgress,
-      );
-      if (kDebugMode) {
-        debugPrint('위젯 업데이트 스킵: 이전 작업 진행 중');
-      }
-      return;
-    }
-
-    final nowForDebounce = DateTime.now();
-    if (_lastWidgetUpdateAt != null &&
-        nowForDebounce.difference(_lastWidgetUpdateAt!) <
-            _widgetUpdateMinInterval) {
-      AnalyticsService.instance.logWidgetSync(
-        schoolId: schoolId,
-        triggerSource: AnalyticsTriggerSource.foreground,
-        result: WidgetSyncResult.skippedDebounce,
-      );
-      if (kDebugMode) {
-        debugPrint('위젯 업데이트 스킵: 너무 짧은 간격');
-      }
-      return;
-    }
-    _lastWidgetUpdateAt = nowForDebounce;
-    _isWidgetUpdateInProgress = true;
-
-    try {
-      final cafeteriaCount = await _widgetSyncHelper.syncWidgetData(
-        todayMeals: todayMeals,
-      );
-      if (kDebugMode) {
-        debugPrint('✅ $cafeteriaCount개 식당 위젯 데이터 업데이트 성공!');
-      }
-
-      AnalyticsService.instance.logWidgetSync(
-        schoolId: schoolId,
-        cafeteriaCount: cafeteriaCount,
-        triggerSource: AnalyticsTriggerSource.foreground,
-        result: WidgetSyncResult.success,
-      );
-    } catch (e) {
-      AnalyticsService.instance.logWidgetSync(
-        schoolId: schoolId,
-        triggerSource: AnalyticsTriggerSource.foreground,
-        result: WidgetSyncResult.failure,
-      );
-      // 위젯 업데이트 실패는 조용히 무시
-      if (kDebugMode) {
-        debugPrint('위젯 업데이트 실패: $e');
-      }
-    } finally {
-      _isWidgetUpdateInProgress = false;
-    }
-  }
-
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   int? get _currentSchoolId =>

@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:bobmoo/constants/storage_keys.dart';
+import 'package:bobmoo/services/widget_update_service.dart';
 import 'package:bobmoo/ui/components/cards/setting_section_card.dart';
 import 'package:bobmoo/ui/theme/app_colors.dart';
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/providers/univ_provider.dart';
 import 'package:bobmoo/services/analytics_service.dart';
 import 'package:bobmoo/ui/theme/app_typography.dart';
-import 'package:bobmoo/services/widget_service.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -100,8 +100,8 @@ class _SettingsScreenState extends State<SettingsScreen>
       _selectedCafeteria = cafeteriaName;
     });
 
-    // 두 위젯 갱신 + 네이티브 스케줄러 즉시 갱신 신호
-    await WidgetService.refreshAllWidgets();
+    // 위젯 업데이트
+    await WidgetUpdateService.updateWidget();
 
     // async 함수에서 context를 사용할 때는 항상 mounted 여부를 확인하는 것이 안전합니다.
     if (!mounted) return;
