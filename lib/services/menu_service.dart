@@ -6,9 +6,13 @@ import 'package:bobmoo/core/exceptions/network_exceptions.dart';
 import 'package:bobmoo/models/menu_model.dart';
 import 'package:http/http.dart' as http;
 
+/// 원격 서버 API와 직접 통신하여 식단 데이터를 조회하는 네트워크 전담 서비스 클래스입니다.
+///
+/// 로컬 DB나 캐싱 전략에는 관여하지 않으며, [MealRepository]의 요청을 받아
+/// 순수 HTTP 통신 및 응답 데이터([MenuResponse]) 파싱 작업만 전담합니다.
 class MenuService {
   // API의 기본 URL
-  final String _baseUrl = 'https://bobmoo.site/api/v1/menu';
+  final String _baseUrl = 'http://10.0.2.2:8080/api/v1/menu';
   static const Duration _requestTimeout = Duration(seconds: 5);
 
   // 날짜를 인자로 받아 해당 날짜의 메뉴를 가져오는 함수
