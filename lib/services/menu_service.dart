@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:bobmoo/constants/api_constants.dart';
 import 'package:bobmoo/core/exceptions/network_exceptions.dart';
 import 'package:bobmoo/models/menu_model.dart';
 import 'package:http/http.dart' as http;
@@ -12,7 +13,7 @@ import 'package:http/http.dart' as http;
 /// 순수 HTTP 통신 및 응답 데이터([MenuResponse]) 파싱 작업만 전담합니다.
 class MenuService {
   // API의 기본 URL
-  final String _baseUrl = 'http://10.0.2.2:8080/api/v1/menu';
+  final String _url = ApiConstants.menu;
   static const Duration _requestTimeout = Duration(seconds: 5);
 
   // 날짜를 인자로 받아 해당 날짜의 메뉴를 가져오는 함수
@@ -25,7 +26,7 @@ class MenuService {
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
     final uri = Uri.parse(
-      _baseUrl,
+      _url,
     ).replace(queryParameters: {'date': formattedDate, 'school': schoolNameK});
 
     late final http.Response response;

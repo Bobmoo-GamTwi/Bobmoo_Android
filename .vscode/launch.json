@@ -20,7 +20,9 @@
             "cwd": "${workspaceFolder}",
             "args": [
                 "--flavor",
-                "staging"
+                "staging",
+                "--dart-define",
+                "BASE_URL=https://bobmoo.site"
             ]
         }
     ]

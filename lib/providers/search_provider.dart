@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:bobmoo/constants/api_constants.dart';
 import 'package:bobmoo/core/exceptions/network_exceptions.dart';
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/services/analytics_service.dart';
@@ -15,7 +16,7 @@ class SearchProvider extends ChangeNotifier {
   bool _isLoading = true;
   Object? _schoolListLoadError;
 
-  final String _baseUrl = 'https://bobmoo.site/api/v1/schools';
+  final String _url = ApiConstants.schools;
   static const Duration _requestTimeout = Duration(seconds: 5);
 
   // 1. 앱 시작 시 딱 한 번 호출해서 상태를 복원합니다.
@@ -50,7 +51,7 @@ class SearchProvider extends ChangeNotifier {
   Future<List<University>> _loadUniversities() async {
     late final http.Response response;
     try {
-      response = await http.get(Uri.parse(_baseUrl)).timeout(_requestTimeout);
+      response = await http.get(Uri.parse(_url)).timeout(_requestTimeout);
     } on TimeoutException {
       throw const RequestTimeoutException();
     } on SocketException {
