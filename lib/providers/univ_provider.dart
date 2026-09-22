@@ -5,6 +5,7 @@ import 'package:bobmoo/locator.dart';
 import 'package:bobmoo/models/university.dart';
 import 'package:bobmoo/repositories/meal_repository.dart';
 import 'package:bobmoo/services/analytics_service.dart';
+import 'package:bobmoo/utils/app_logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,19 +25,21 @@ class UnivProvider extends ChangeNotifier {
     String? jsonString = prefs.getString(LocalStorageKeys.selectedUniv);
 
     if (jsonString != null) {
-      try {
-        final json = jsonDecode(jsonString) as Map<String, dynamic>?;
-        if (json != null &&
-            json['schoolId'] != null &&
-            json['schoolName'] != null &&
-            json['schoolNameK'] != null &&
-            json['schoolColor'] != null) {
-          _selectedUniversity = University.fromJson(json);
-          _lastUnivColor = _selectedUniversity!.hexToColor();
-        }
-        // 필수 데이터 없으면 그냥 null 유지 → 학교 선택 화면으로 감
-      } catch (e) {
-        await prefs.remove(LocalStorageKeys.selectedUniv); // 깨진 데이터 삭제
+      final json = jsonDecode(jsonString) as Map<String, dynamic>?;
+      final univ = University.tryFromJson(json);
+
+      if (univ != null) {
+        _selectedUniversity = univ;
+        _lastUnivColor = univ.hexToColor();
+      } else {
+        AppLogger.w(
+          '저장된 대학교 데이터가 손상되었거나 최신 모델 구조와 일치하지 않아 삭제합니다. (Key: ${LocalStorageKeys.selectedUniv})',
+          tag: 'UnivProvider',
+        );
+
+        // 깨진 데이터 삭제 및 변수 초기화
+        await prefs.remove(LocalStorageKeys.selectedUniv);
+        _selectedUniversity = null;
       }
     }
 

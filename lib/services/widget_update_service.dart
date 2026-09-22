@@ -35,11 +35,23 @@ class WidgetUpdateService {
       University? targetUniv;
       // 1. SharedPreferences에서 선택한 학교 정보 가져오기
       final jsonString = prefs.getString(LocalStorageKeys.selectedUniv);
+
       if (jsonString != null) {
-        targetUniv = University.fromJson(jsonDecode(jsonString));
+        try {
+          final json = jsonDecode(jsonString) as Map<String, dynamic>?;
+          targetUniv = University.tryFromJson(json);
+        } catch (e, stackTrace) {
+          AppLogger.e(
+            "대학교 JSON 디코딩 실패",
+            error: e,
+            stackTrace: stackTrace,
+            tag: "WIDGET",
+          );
+          targetUniv = null;
+        }
       }
 
-      // 선택된 학교가 없으면 종료
+      // 선택된 학교가 없거나 데이터가 손상되었으면 종료
       if (targetUniv == null) {
         AppLogger.w("선택한 학교가 없어 위젯 업데이트를 스킵합니다.", tag: "WIDGET");
         return;

@@ -65,7 +65,8 @@ class SearchProvider extends ChangeNotifier {
       final List<dynamic> jsonSchoolList = decoded['data'] ?? [];
 
       return jsonSchoolList
-          .map((json) => University.fromJson(json as Map<String, dynamic>))
+          .map((json) => University.tryFromJson(json as Map<String, dynamic>))
+          .whereType<University>()
           .toList();
     }
 
